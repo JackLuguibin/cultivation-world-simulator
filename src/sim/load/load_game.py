@@ -188,13 +188,26 @@ def load_game(save_path: Optional[Path] = None) -> Tuple["World", "Simulator", L
         print(f"正在加载存档 (版本: {meta.get('version', 'unknown')}, "
               f"游戏时间: {meta.get('game_time', 'unknown')})")
         
-        # 重建地图（地图本身不变，只需重建宗门总部位置）
-        game_map = load_cultivation_world_map()
-        
         # 读取世界数据
         world_data = save_data.get("world", {})
         month_stamp = MonthStamp(world_data["month_stamp"])
         start_year = world_data.get("start_year", 100)
+
+        # 重建地图：如果存档含随机地图参数，用相同 seed 重新生成；否则加载静态CSV
+        map_params = world_data.get("map_params", {})
+        if map_params.get("use_random_map"):
+            from src.run.map_generator import generate_map as _gen_map
+            from src.classes.core.sect import sects_by_id as _sbi
+            _seed = map_params["map_seed"]
+            _w = map_params["map_width"]
+            _h = map_params["map_height"]
+            # 先用存档的 existed_sect_ids 重建宗门列表
+            _existed_sect_ids = world_data.get("existed_sect_ids", [])
+            _existed_sects = [_sbi[sid] for sid in _existed_sect_ids if sid in _sbi]
+            print(f"读档：随机地图 seed={_seed}, size={_w}x{_h}")
+            game_map, _ = _gen_map(width=_w, height=_h, seed=_seed, existed_sects=_existed_sects)
+        else:
+            game_map = load_cultivation_world_map()
         
         # 计算事件数据库路径。
         events_db_path = get_events_db_path(save_path)
@@ -206,6 +219,8 @@ def load_game(save_path: Optional[Path] = None) -> Tuple["World", "Simulator", L
             events_db_path=events_db_path,
             start_year=start_year,
         )
+        # 将地图参数附加到 world，供二次存档时使用
+        world._map_params = map_params
         
         # 恢复世界历史
         history_data = world_data.get("history", {})
@@ -262,6 +277,19 @@ def load_game(save_path: Optional[Path] = None) -> Tuple["World", "Simulator", L
         # 将所有avatar添加到world
         world.avatar_manager.avatars = living_avatars
         world.avatar_manager.dead_avatars = dead_avatars
+
+        # 坐标 clamp：确保角色位置不超出地图边界（在地图尺寸与存档不同时安全兜底）
+        _map_w = game_map.width
+        _map_h = game_map.height
+        for avatar in all_avatars.values():
+            if hasattr(avatar, "pos_x") and hasattr(avatar, "pos_y"):
+                avatar.pos_x = max(0, min(_map_w - 1, avatar.pos_x))
+                avatar.pos_y = max(0, min(_map_h - 1, avatar.pos_y))
+                # 同步 tile
+                try:
+                    avatar.tile = game_map.get_tile(avatar.pos_x, avatar.pos_y)
+                except Exception:
+                    pass
         
         # 恢复洞府主人关系
         cultivate_regions_hosts = world_data.get("cultivate_regions_hosts", {})

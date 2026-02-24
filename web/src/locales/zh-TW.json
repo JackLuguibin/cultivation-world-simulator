@@ -150,18 +150,34 @@
   "game_start": {
     "title": "開始遊戲",
     "description": "設定世界的初始狀態。注意：遊戲開始後，這些設定將無法更改。",
+    "map_section": "世界地圖",
+    "history_section": "世界歷史",
     "labels": {
       "init_npc_num": "初始修士數量",
       "sect_num": "活躍宗門數量",
       "new_npc_rate": "每月新生修士概率",
-      "world_history": "世界歷史背景"
+      "world_history": "世界歷史背景",
+      "use_random_map": "隨機生成地圖",
+      "map_size": "地圖大小",
+      "map_width": "地圖寬度",
+      "map_height": "地圖高度",
+      "map_seed": "世界種子"
+    },
+    "map_size": {
+      "small": "小（100×65）",
+      "medium": "中（160×100）",
+      "large": "大（240×150）",
+      "custom": "自訂"
     },
     "tips": {
       "sect_num": "宗門數量建議少於角色數量的一半",
-      "world_history": "可以包括上古、中古、近古。注意：啓用此功能會調用LLM，初始化時間會顯著增加。"
+      "world_history": "可以包括上古、中古、近古。注意：啓用此功能會調用LLM，初始化時間會顯著增加。",
+      "map_size_current": "目前：{w} × {h} 格",
+      "map_seed": "留空則每次隨機生成不同的世界；填入相同數字可復現同一張地圖。"
     },
     "placeholders": {
-      "world_history": "請輸入修仙界歷史背景（可選）。"
+      "world_history": "請輸入修仙界歷史背景（可選）。",
+      "map_seed": "留空=隨機種子，可輸入任意整數"
     },
     "options": {},
     "actions": {

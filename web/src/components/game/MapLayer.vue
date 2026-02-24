@@ -108,21 +108,20 @@ async function renderMap() {
   let hasSea = false
   let hasWater = false
 
+  // 先收集所有 sea/water 格，最后批量 fill（一次 fill = 一个 path）
+  // 避免大地图下数万次独立 fill() 导致 Pixi 卡死
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const type = worldStore.mapData[y][x]
 
-      // 处理特殊地块：海与水
       if (type === 'SEA') {
         seaMask.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        seaMask.fill(0xffffff)
         hasSea = true
         continue
       }
       
       if (type === 'WATER') {
         waterMask.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        waterMask.fill(0xffffff)
         hasWater = true
         continue
       }
@@ -130,13 +129,14 @@ async function renderMap() {
       // 处理普通地块
       let tex = getTileTexture(type, x, y)
 
-      // SECT 地块由 renderLargeRegions 渲染，这里跳过
-      if (type === 'SECT') {
+      // SECT / CAVE / RUIN 由 renderLargeRegions 渲染，这里跳过
+      if (type === 'SECT' || type === 'CAVE' || type === 'RUIN') {
         continue
       }
 
       if (!tex) {
-        throw new Error(`Missing texture for tile type: ${type} at (${x}, ${y})`)
+        // 未知地形：fallback 到平原纹理，避免崩溃
+        tex = textures.value['PLAIN']
       }
 
       if (!tex) continue
@@ -153,9 +153,9 @@ async function renderMap() {
     }
   }
 
-  // v8 不需要 endFill
-  // seaMask.endFill()
-  // waterMask.endFill()
+  // 一次性 fill：所有 sea/water rect 收集完毕后统一填充
+  if (hasSea)  seaMask.fill(0xffffff)
+  if (hasWater) waterMask.fill(0xffffff)
 
   // --- 3. 组装图层 ---
   // 顺序：海 -> 水 -> 陆地

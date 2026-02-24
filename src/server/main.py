@@ -371,9 +371,48 @@ async def init_game_async():
         
         await asyncio.to_thread(scan_avatar_assets)
 
-        # 阶段 1: 地图加载
+        # 阶段 1: 地图加载（含宗门预选，以便随机地图在生成时知道放哪些宗门）
         update_init_progress(1, "loading_map")
-        game_map = await asyncio.to_thread(load_cultivation_world_map)
+
+        # 先确定宗门列表（随机地图生成需要用到）
+        all_sects = list(sects_by_id.values())
+        needed_sects = int(getattr(CONFIG.game, "sect_num", 0) or 0)
+        existed_sects = []
+        if needed_sects > 0 and all_sects:
+            pool = list(all_sects)
+            random.shuffle(pool)
+            existed_sects = pool[:needed_sects]
+
+        _urm_raw = getattr(CONFIG.game, "use_random_map", False)
+        use_random_map = _urm_raw is True or str(_urm_raw).lower() == "true"
+        if use_random_map:
+            from src.run.map_generator import generate_map as _gen_map
+            _map_seed_str = str(getattr(CONFIG.game, "map_seed", "") or "").strip()
+            _map_seed = int(_map_seed_str) if _map_seed_str.lstrip("-").isdigit() else random.randint(0, 2**31 - 1)
+            _map_width = int(getattr(CONFIG.game, "map_width", 160))
+            _map_height = int(getattr(CONFIG.game, "map_height", 100))
+            print(f"随机地图：seed={_map_seed}, size={_map_width}x{_map_height}")
+            _existed_sects_ref = existed_sects  # 闭包引用
+            def _gen_map_sync():
+                result_map, _ = _gen_map(
+                    width=_map_width,
+                    height=_map_height,
+                    seed=_map_seed,
+                    existed_sects=_existed_sects_ref,
+                )
+                return result_map
+            game_map = await asyncio.to_thread(_gen_map_sync)
+            # 记录地图参数供存档使用
+            game_instance["map_params"] = {
+                "use_random_map": True,
+                "map_seed": _map_seed,
+                "map_width": _map_width,
+                "map_height": _map_height,
+            }
+        else:
+            game_instance.pop("map_params", None)
+            game_instance["map_params"] = {"use_random_map": False}
+            game_map = await asyncio.to_thread(load_cultivation_world_map)
 
         # 初始化 SQLite 事件数据库
         from datetime import datetime
@@ -397,6 +436,8 @@ async def init_game_async():
             start_year=start_year,
         )
         sim = Simulator(world)
+        # 将地图参数附加到 world 对象，供存档时使用
+        world._map_params = game_instance.get("map_params", {"use_random_map": False})
 
         # 阶段 2: 历史背景影响 (如果配置了历史)
         update_init_progress(2, "processing_history")
@@ -411,15 +452,8 @@ async def init_game_async():
             except Exception as e:
                 print(f"[警告] 历史背景应用失败: {e}")
         
-        # 阶段 3: 宗门初始化
+        # 阶段 3: 宗门初始化（宗门列表已在地图加载前确定）
         update_init_progress(3, "initializing_sects")
-        all_sects = list(sects_by_id.values())
-        needed_sects = int(getattr(CONFIG.game, "sect_num", 0) or 0)
-        existed_sects = []
-        if needed_sects > 0 and all_sects:
-            pool = list(all_sects)
-            random.shuffle(pool)
-            existed_sects = pool[:needed_sects]
 
         # 阶段 4: 角色生成
         update_init_progress(4, "generating_avatars")
@@ -1027,6 +1061,10 @@ class GameStartRequest(BaseModel):
     sect_num: int
     npc_awakening_rate_per_month: float
     world_history: Optional[str] = None
+    use_random_map: bool = False
+    map_seed: Optional[str] = None   # 空字符串或 None → 随机种子
+    map_width: int = 160
+    map_height: int = 100
 
 @app.get("/api/config/current")
 def get_current_config():
@@ -1036,7 +1074,11 @@ def get_current_config():
             "init_npc_num": getattr(CONFIG.game, "init_npc_num", 12),
             "sect_num": getattr(CONFIG.game, "sect_num", 3),
             "npc_awakening_rate_per_month": getattr(CONFIG.game, "npc_awakening_rate_per_month", 0.01),
-            "world_history": getattr(CONFIG.game, "world_history", "")
+            "world_history": getattr(CONFIG.game, "world_history", ""),
+            "use_random_map": bool(getattr(CONFIG.game, "use_random_map", False)),
+            "map_seed": str(getattr(CONFIG.game, "map_seed", "") or ""),
+            "map_width": int(getattr(CONFIG.game, "map_width", 160)),
+            "map_height": int(getattr(CONFIG.game, "map_height", 100)),
         },
         "avatar": {}
     }
@@ -1077,6 +1119,10 @@ async def start_game(req: GameStartRequest):
     conf.game.sect_num = req.sect_num
     conf.game.npc_awakening_rate_per_month = req.npc_awakening_rate_per_month
     conf.game.world_history = req.world_history or ""
+    conf.game.use_random_map = req.use_random_map
+    conf.game.map_seed = req.map_seed or ""
+    conf.game.map_width = req.map_width
+    conf.game.map_height = req.map_height
     
     # 写入文件
     try:

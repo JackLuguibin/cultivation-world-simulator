@@ -150,18 +150,34 @@
   "game_start": {
     "title": "Start Game",
     "description": "Configure initial world state. Note: These settings cannot be changed once the game starts.",
+    "map_section": "World Map",
+    "history_section": "World History",
     "labels": {
       "init_npc_num": "Initial Cultivators",
       "sect_num": "Active Sects",
       "new_npc_rate": "Monthly New Cultivator Rate",
-      "world_history": "World History Background"
+      "world_history": "World History Background",
+      "use_random_map": "Random Map Generation",
+      "map_size": "Map Size",
+      "map_width": "Map Width",
+      "map_height": "Map Height",
+      "map_seed": "World Seed"
+    },
+    "map_size": {
+      "small": "Small (100×65)",
+      "medium": "Medium (160×100)",
+      "large": "Large (240×150)",
+      "custom": "Custom"
     },
     "tips": {
       "sect_num": "Sect number should be less than half of initial cultivators.",
-      "world_history": "Can include ancient, medieval, or recent history. Note: Enabling this calls LLM and significantly increases initialization time."
+      "world_history": "Can include ancient, medieval, or recent history. Note: Enabling this calls LLM and significantly increases initialization time.",
+      "map_size_current": "Current: {w} × {h} tiles",
+      "map_seed": "Leave empty for a random world each time; enter any integer to reproduce the same map."
     },
     "placeholders": {
-      "world_history": "Enter cultivation world history background (Optional)."
+      "world_history": "Enter cultivation world history background (Optional).",
+      "map_seed": "Empty = random seed, or enter any integer"
     },
     "options": {},
     "actions": {

@@ -28,6 +28,10 @@ game:
   sect_num: 3 # init_npc_num大于sect_num时，会随机选择sect_num个宗门
   start_year: 100 # 世界开始年份
   npc_awakening_rate_per_month: 0.01
+  use_random_map: false  # 是否使用随机生成的地图（true=随机生成，false=加载静态CSV地图）
+  map_seed: ""           # 世界种子（空字符串=每次随机，填数字则固定种子）
+  map_width: 160         # 随机地图宽度（格子数，仅 use_random_map=true 时生效）
+  map_height: 100        # 随机地图高度（格子数，仅 use_random_map=true 时生效）
   fortune_probability: 0.005
   misfortune_probability: 0.005
   birth_rate_per_month: 0.005 # 每月生育概率 (0.5%)

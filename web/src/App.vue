@@ -20,6 +20,7 @@ import RankingPanel from './components/game/panels/RankingPanel.vue'
 import ChroniclePanel from './components/game/panels/ChroniclePanel.vue'
 import TournamentPanel from './components/game/panels/TournamentPanel.vue'
 import WorldCrisisAlert from './components/game/WorldCrisisAlert.vue'
+import MiniMap from './components/game/MiniMap.vue'
 
 // Composables
 import { useGameInit } from './composables/useGameInit'
@@ -259,6 +260,8 @@ onUnmounted(() => {
             <TournamentPanel v-if="gameInitialized" />
             <!-- 世界危机预警 -->
             <WorldCrisisAlert v-if="gameInitialized" />
+            <!-- 小地图 -->
+            <MiniMap v-if="gameInitialized" />
           </div>
           <div
             class="sidebar-resizer"

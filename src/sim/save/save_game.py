@@ -153,6 +153,9 @@ def save_game(
                          "prosperity": region.prosperity
                      }
 
+        # 地图参数（用于读档时复现地图）
+        map_params = getattr(world, "_map_params", None) or {}
+        
         world_data = {
             "month_stamp": int(world.month_stamp),
             "start_year": world.start_year,
@@ -169,6 +172,8 @@ def save_game(
                 "text": world.history.text,
                 "modifications": world.history.modifications
             },
+            # 地图参数（随机地图时用于复现）
+            "map_params": map_params,
         }
         
         # 保存所有Avatar（第一阶段：不含relations）

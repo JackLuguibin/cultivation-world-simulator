@@ -138,6 +138,10 @@ export interface GameStartConfigDTO {
   sect_num: number;
   npc_awakening_rate_per_month: number;
   world_history?: string;
+  use_random_map: boolean;
+  map_seed?: string;
+  map_width: number;
+  map_height: number;
 }
 
 export interface CurrentConfigDTO {
@@ -146,6 +150,10 @@ export interface CurrentConfigDTO {
     sect_num: number;
     npc_awakening_rate_per_month: number;
     world_history?: string;
+    use_random_map: boolean;
+    map_seed: string;
+    map_width: number;
+    map_height: number;
   };
   avatar: {};
 }
