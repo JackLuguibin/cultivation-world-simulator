@@ -1,8 +1,9 @@
 import { httpClient } from '../http';
-import type { 
-  InitialStateDTO, 
-  MapResponseDTO, 
-  PhenomenonDTO
+import type {
+  InitialStateDTO,
+  MapResponseDTO,
+  PhenomenonDTO,
+  RankingsDTO,
 } from '../../types/api';
 
 export const worldApi = {
@@ -20,5 +21,9 @@ export const worldApi = {
 
   setPhenomenon(id: number) {
     return httpClient.post('/api/control/set_phenomenon', { id });
-  }
+  },
+
+  fetchRankings() {
+    return httpClient.get<RankingsDTO>('/api/meta/rankings');
+  },
 };

@@ -102,6 +102,7 @@ def _load_and_assign_regions(game_map: Map, region_coords: dict[int, list[tuple[
                 params["animal_ids"] = _parse_list(get_str(row, "animal_ids"))
                 params["plant_ids"] = _parse_list(get_str(row, "plant_ids"))
                 params["lode_ids"] = _parse_list(get_str(row, "lode_ids"))
+                params["essence_density"] = get_int(row, "essence_density", 0)
             elif type_tag == "cultivate":
                 params["essence_type"] = EssenceType.from_str(get_str(row, "root_type"))
                 params["essence_density"] = get_int(row, "root_density")

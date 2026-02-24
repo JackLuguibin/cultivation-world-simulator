@@ -107,7 +107,9 @@ class NormalRegion(Region):
     animal_ids: list[int] = field(default_factory=list)
     plant_ids: list[int] = field(default_factory=list)
     lode_ids: list[int] = field(default_factory=list)
-    
+    # 区域灵气浓度 0～10，影响天材地宝采集数量
+    essence_density: int = 0
+
     animals: list[Animal] = field(init=False, default_factory=list)
     plants: list[Plant] = field(init=False, default_factory=list)
     lodes: list[Lode] = field(init=False, default_factory=list)
@@ -161,12 +163,11 @@ class NormalRegion(Region):
     def get_structured_info(self) -> dict:
         info = super().get_structured_info()
         info["type_name"] = t("Normal Region")
-        
+        info["essence_density"] = self.essence_density
         # Assuming animals and plants are populated in __post_init__
         info["animals"] = [a.get_structured_info() for a in self.animals] if self.animals else []
         info["plants"] = [p.get_structured_info() for p in self.plants] if self.plants else []
         info["lodes"] = [l.get_structured_info() for l in self.lodes] if self.lodes else []
-        
         return info
 
 

@@ -92,55 +92,40 @@ class Prices:
             return obj.price
         return 0
 
+    def _get_world_spirit_qi(self, avatar: "Avatar" = None) -> float:
+        """从角色所在世界获取天地灵气，无世界时默认 0.6"""
+        if avatar is not None and hasattr(avatar, "world") and avatar.world is not None:
+            return max(0.0, min(1.0, float(getattr(avatar.world, "world_spirit_qi", 0.6))))
+        return 0.6
+
     def get_buying_price(self, obj: Sellable, buyer: "Avatar" = None) -> int:
         """
         获取玩家购买价格（从系统商店购买）。
-        
-        计算公式：
-            基础价格 * max(1.0, GLOBAL_BUY_MULTIPLIER - 折扣)
-            
-        Args:
-            obj: 交易物品
-            buyer: 买家（用于计算折扣）
+        计算公式：基础价格 * 倍率 * 天地灵气系数（灵气越高物价略涨）。
         """
         base_price = self.get_price(obj)
-        
-        # 默认倍率 1.5
         multiplier = self.GLOBAL_BUY_MULTIPLIER
-        
         if buyer is not None:
-            # 获取折扣 (倍率减免)
-            # 例如 0.1 表示倍率 -0.1
             reduction = float(buyer.effects.get("shop_buy_price_reduction", 0.0))
             multiplier -= reduction
-            
-        # 保证倍率不低于 1.0 (原价)
         final_multiplier = max(1.0, multiplier)
-        
-        return int(base_price * final_multiplier)
+        qi = self._get_world_spirit_qi(buyer)
+        spirit_factor = 1.0 + 0.2 * (qi - 0.5)  # 0.5 时不变，1.0 时 +10%，0 时 -10%
+        return int(base_price * final_multiplier * spirit_factor)
 
     def get_selling_price(self, obj: Sellable, seller: "Avatar" = None) -> int:
         """
         获取玩家卖出价格（卖给系统商店）。
-        
-        计算公式：
-            基础价格 * (1.0 + 卖出加成)
-            
-        Args:
-            obj: 交易物品
-            seller: 卖家（用于计算加成）
+        计算公式：基础价格 * (1.0 + 卖出加成) * 天地灵气系数。
         """
         base_price = self.get_price(obj)
-        
         multiplier = 1.0
-        
         if seller is not None:
-            # 获取卖出加成
-            # 例如 0.2 表示价格 +20%
             bonus = float(seller.effects.get("extra_item_sell_price_multiplier", 0.0))
             multiplier += bonus
-            
-        return int(base_price * multiplier)
+        qi = self._get_world_spirit_qi(seller)
+        spirit_factor = 1.0 + 0.2 * (qi - 0.5)
+        return int(base_price * multiplier * spirit_factor)
 
 
 # 全局单例

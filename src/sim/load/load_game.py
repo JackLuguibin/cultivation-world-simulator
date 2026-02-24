@@ -237,6 +237,7 @@ def load_game(save_path: Optional[Path] = None) -> Tuple["World", "Simulator", L
         if phenomenon_id is not None and phenomenon_id in celestial_phenomena_by_id:
             world.current_phenomenon = celestial_phenomena_by_id[phenomenon_id]
             world.phenomenon_start_year = world_data.get("phenomenon_start_year", 0)
+        world.world_spirit_qi = float(world_data.get("world_spirit_qi", 0.6))
             
         # 恢复出世物品流转
         circulation_data = world_data.get("circulation", {})

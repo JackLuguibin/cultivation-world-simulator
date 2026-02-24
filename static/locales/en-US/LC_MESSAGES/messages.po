@@ -2795,6 +2795,9 @@ msgid "phenomenon_change"
 msgstr ""
 "{old_name} dissipates, celestial phenomena reappear! {new_name}: {new_desc}."
 
+msgid "npc_trade_fallback"
+msgstr "{seller} sold {item} to {buyer} for {amount} spirit stones."
+
 # Single choice - context and options
 msgid ""
 "Current situation: {context}\n"

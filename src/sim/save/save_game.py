@@ -163,6 +163,7 @@ def save_game(
             # 天地灵机
             "current_phenomenon_id": world.current_phenomenon.id if world.current_phenomenon else None,
             "phenomenon_start_year": world.phenomenon_start_year if hasattr(world, 'phenomenon_start_year') else 0,
+            "world_spirit_qi": getattr(world, "world_spirit_qi", 0.6),
             "cultivate_regions_hosts": cultivate_regions_hosts,
             "regions_status": regions_status,
             # 出世物品流转

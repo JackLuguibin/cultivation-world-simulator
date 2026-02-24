@@ -180,6 +180,48 @@ export interface EventsResponseDTO {
   has_more: boolean;
 }
 
+// --- Rankings (天骄榜 / 异宝榜) ---
+
+export interface RealmRankEntry {
+  rank: number;
+  id: string;
+  name: string;
+  realm: string;
+  level: number;
+}
+
+export interface SectRankEntry {
+  rank: number;
+  name: string;
+  count: number;
+  members: string[];
+}
+
+export interface AgeRankEntry {
+  rank: number;
+  id: string;
+  name: string;
+  age: number;
+}
+
+export interface TreasureRankEntry {
+  rank: number;
+  item_id: number;
+  name: string;
+  grade: string;
+  type: 'weapon' | 'auxiliary';
+  owner_id: string | null;
+  owner_name: string | null;
+  in_circulation: boolean;
+}
+
+export interface RankingsDTO {
+  realm: RealmRankEntry[];
+  sect: SectRankEntry[];
+  age: AgeRankEntry[];
+  treasure: TreasureRankEntry[];
+}
+
 export interface FetchEventsParams {
   avatar_id?: string;
   avatar_id_1?: string;

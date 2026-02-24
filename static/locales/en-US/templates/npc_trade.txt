@@ -1,0 +1,15 @@
+You are a storyteller for a xianxia (immortal cultivation) world. In one or two short sentences, describe the following trade between cultivators. Do not repeat the input.
+
+Seller: {seller_name}
+Buyer: {buyer_name}
+Item: {item_name}
+Price: {price_phrase}
+
+Requirements:
+1. Third person, concise, under 30 words in English.
+2. Slightly poetic tone is fine (e.g. "in a corner of the market", "exchanged for spirit stones").
+
+Return only JSON in this format:
+{{
+    "story": "One or two short sentences describing the trade"
+}}

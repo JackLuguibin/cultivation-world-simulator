@@ -2657,6 +2657,12 @@ msgstr "世界初开，天降异象！{name}：{desc}。"
 msgid "phenomenon_change"
 msgstr "{old_name}消散，天地异象再现！{new_name}：{new_desc}。"
 
+msgid "{avatar} gained {amount} spirit stones from the spirit vein at {region}."
+msgstr "{avatar} 在 {region} 灵脉获得 {amount} 灵石。"
+
+msgid "npc_trade_fallback"
+msgstr "{seller} 以 {amount} 灵石将 {item} 售与 {buyer}。"
+
 # Single choice - context and options
 msgid ""
 "Current situation: {context}\n"

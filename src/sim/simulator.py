@@ -367,6 +367,16 @@ class Simulator:
             if isinstance(region, CityRegion):
                 region.change_prosperity(1)
 
+    def _phase_spirit_vein_output(self):
+        """每年一月，有主洞府/遗迹灵脉产出灵石给占据者"""
+        from src.systems.spirit_economy import process_spirit_vein_output
+        return process_spirit_vein_output(self.world)
+
+    async def _phase_npc_trade(self):
+        """同区域 NPC 间材料交易，概率触发，LLM 生成古风描述"""
+        from src.systems.npc_trade import try_trigger_npc_trade
+        return await try_trigger_npc_trade(self.world)
+
     def _phase_log_events(self, events):
         """
         将事件写入日志。
@@ -530,6 +540,12 @@ class Simulator:
 
         # 14. 更新城市繁荣度
         self._phase_update_region_prosperity()
+
+        # 14.5 (每年1月) 灵脉产出灵石
+        events.extend(self._phase_spirit_vein_output())
+
+        # 14.6 NPC 间交易（同区域材料买卖，LLM 叙事）
+        events.extend(await self._phase_npc_trade())
 
         # 15. 处理剩余阶段的交互计数
         self._phase_handle_interactions(events, processed_event_ids)

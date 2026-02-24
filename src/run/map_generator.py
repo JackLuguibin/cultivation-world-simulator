@@ -551,6 +551,7 @@ def generate_map(
             "animal_ids": _parse_list(get_str(row, "animal_ids")),
             "plant_ids": _parse_list(get_str(row, "plant_ids")),
             "lode_ids": _parse_list(get_str(row, "lode_ids")),
+            "essence_density": get_int(row, "essence_density", 0),
         }
 
     # BFS 连通块 → NormalRegion，但每种地形只分配同一个 region_id，合并同类区域
@@ -584,6 +585,7 @@ def generate_map(
             animal_ids=meta["animal_ids"],
             plant_ids=meta["plant_ids"],
             lode_ids=meta["lode_ids"],
+            essence_density=meta.get("essence_density", 0),
         )
         game_map.regions[rid] = region_obj
         game_map.region_cors[rid] = cors

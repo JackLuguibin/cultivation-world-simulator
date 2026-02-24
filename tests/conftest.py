@@ -140,7 +140,9 @@ def base_map():
 @pytest.fixture
 def base_world(base_map):
     """创建一个基于 base_map 的世界，时间为 Year 1, Jan"""
-    return World(map=base_map, month_stamp=create_month_stamp(Year(1), Month.JANUARY))
+    world = World(map=base_map, month_stamp=create_month_stamp(Year(1), Month.JANUARY))
+    world.world_spirit_qi = 0.5  # 测试时物价系数为 1.0，与历史用例一致
+    return world
 
 @pytest.fixture
 def dummy_avatar(base_world):

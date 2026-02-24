@@ -1,55 +1,50 @@
 <script setup lang="ts">
 /**
  * 天骄榜 / 排行榜面板
- * 展示修为榜、宗门榜、长寿榜等多维排行
+ * 展示修为榜、宗门榜、长寿榜、异宝榜
  */
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useWorldStore } from '../../../stores/world'
 import { useUiStore } from '../../../stores/ui'
+import { worldApi } from '../../../api'
+import type { RankingsDTO } from '../../../types/api'
 
 const worldStore = useWorldStore()
 const uiStore = useUiStore()
 
 const showPanel = ref(false)
-const activeTab = ref<'realm' | 'sect' | 'age'>('realm')
+const activeTab = ref<'realm' | 'sect' | 'age' | 'treasure'>('realm')
+const rankingsData = ref<RankingsDTO | null>(null)
 
-// 境界排序权重
-const REALM_WEIGHT: Record<string, number> = {
-  '练气期': 100, '筑基期': 200, '金丹期': 300,
-  '元婴期': 400, '化神期': 500, '炼虚期': 600,
-  '合体期': 700, '大乘期': 800, '渡劫期': 900
-}
-
-function getRealmWeight(realm: string): number {
-  for (const [key, w] of Object.entries(REALM_WEIGHT)) {
-    if (realm?.includes(key)) return w;
-  }
-  return 0;
-}
-
-// 修为榜 Top 10（按境界+等级）
-const realmRanking = computed(() => {
-  return [...worldStore.avatarList]
-    .filter(a => !a.is_dead)
-    .sort((a, b) => {
-      // 从 action 字段解析境界信息（因AvatarSummary没有realm字段）
-      return 0;
+watch(showPanel, (open) => {
+  if (open) {
+    worldApi.fetchRankings().then((res) => {
+      rankingsData.value = res ?? null
+    }).catch(() => {
+      rankingsData.value = null
     })
-    .slice(0, 15)
-    .map((a, i) => ({ rank: i + 1, ...a }))
+  }
 })
 
-// 宗门实力榜（按宗门成员数量统计）
+// 修为榜（优先使用 API 数据）
+const realmRanking = computed(() => {
+  const data = rankingsData.value?.realm
+  if (data?.length) return data
+  return worldStore.avatarList
+    .filter((a: { is_dead?: boolean }) => !a.is_dead)
+    .slice(0, 15)
+    .map((a: { id: string; name?: string }, i: number) => ({ rank: i + 1, id: a.id, name: a.name ?? '', realm: '', level: 0 }))
+})
+
+// 宗门榜
 const sectRanking = computed(() => {
+  const data = rankingsData.value?.sect
+  if (data?.length) return data
   const sectMap = new Map<string, { name: string; count: number; members: string[] }>()
   for (const a of worldStore.avatarList) {
     if (a.is_dead) continue
-    // 从 action 字段中尝试获取宗门名（简单近似）
-    // 实际上 AvatarSummary 没有 sect 字段，这里用 id 做聚合示意
-    const key = 'sect_generic'
-    if (!sectMap.has(key)) {
-      sectMap.set(key, { name: '综合统计', count: 0, members: [] })
-    }
+    const key = '散修'
+    if (!sectMap.has(key)) sectMap.set(key, { name: key, count: 0, members: [] })
     sectMap.get(key)!.count++
   }
   return Array.from(sectMap.values())
@@ -58,14 +53,18 @@ const sectRanking = computed(() => {
     .map((s, i) => ({ rank: i + 1, ...s }))
 })
 
-// 长寿榜（当前存活修士列表，按ID排序近似年龄）
+// 长寿榜
 const ageRanking = computed(() => {
-  return [...worldStore.avatarList]
-    .filter(a => !a.is_dead)
-    .sort(() => Math.random() - 0.5) // 没有age信息，随机展示
+  const data = rankingsData.value?.age
+  if (data?.length) return data
+  return worldStore.avatarList
+    .filter((a: { is_dead?: boolean }) => !a.is_dead)
     .slice(0, 15)
-    .map((a, i) => ({ rank: i + 1, ...a }))
+    .map((a: { id: string; name?: string }, i: number) => ({ rank: i + 1, id: a.id, name: a.name ?? '', age: 0 }))
 })
+
+// 异宝榜
+const treasureRanking = computed(() => rankingsData.value?.treasure ?? [])
 
 function jumpToAvatar(id: string) {
   uiStore.select('avatar', id)
@@ -114,12 +113,13 @@ function getRankLabel(rank: number): string {
               v-for="tab in [
                 { id: 'realm', label: '修为榜', icon: '⚡' },
                 { id: 'sect', label: '宗门榜', icon: '⊙' },
-                { id: 'age', label: '众生榜', icon: '♾' }
+                { id: 'age', label: '众生榜', icon: '♾' },
+                { id: 'treasure', label: '异宝榜', icon: '◆' }
               ]"
               :key="tab.id"
               class="tab-btn"
               :class="{ active: activeTab === tab.id }"
-              @click="activeTab = tab.id as any"
+              @click="activeTab = tab.id"
             >
               {{ tab.icon }} {{ tab.label }}
             </button>
@@ -138,16 +138,13 @@ function getRankLabel(rank: number): string {
               </div>
               <div class="rank-name">
                 <span class="avatar-name">{{ item.name }}</span>
-                <span class="avatar-extra">{{ item.action || '...' }}</span>
+                <span class="avatar-extra">{{ item.realm || '...' }}</span>
               </div>
               <div class="rank-badge" :style="{ color: getRankColor(item.rank) }">
                 <span v-if="item.rank <= 3">✦</span>
               </div>
             </div>
-
-            <div v-if="realmRanking.length === 0" class="empty-hint">
-              尚无修士数据
-            </div>
+            <div v-if="realmRanking.length === 0" class="empty-hint">尚无修士数据</div>
           </div>
 
           <!-- 宗门榜 -->
@@ -199,11 +196,32 @@ function getRankLabel(rank: number): string {
               </div>
               <div class="rank-name">
                 <span class="avatar-name">{{ item.name }}</span>
-                <span class="avatar-extra avatar-gender" :class="item.gender === '女' ? 'female' : 'male'">
-                  {{ item.gender === '女' ? '♀' : '♂' }}
-                </span>
+                <span class="avatar-extra">岁 {{ item.age }}</span>
               </div>
             </div>
+          </div>
+
+          <!-- 异宝榜 -->
+          <div v-if="activeTab === 'treasure'" class="rank-list">
+            <div
+              v-for="item in treasureRanking"
+              :key="item.rank + '-' + item.item_id + '-' + (item.owner_id ?? 'circ')"
+              class="rank-item treasure-item"
+              @click="item.owner_id && jumpToAvatar(item.owner_id)"
+            >
+              <div class="rank-num" :style="{ color: getRankColor(item.rank) }">
+                {{ getRankLabel(item.rank) }}
+              </div>
+              <div class="rank-name">
+                <span class="avatar-name">{{ item.name }}</span>
+                <span class="avatar-extra">{{ item.grade }} · {{ item.type === 'weapon' ? '兵器' : '法宝' }}</span>
+              </div>
+              <div class="treasure-owner">
+                <template v-if="item.in_circulation">流通中</template>
+                <template v-else-if="item.owner_name">{{ item.owner_name }}</template>
+              </div>
+            </div>
+            <div v-if="treasureRanking.length === 0" class="empty-hint">尚无异宝记录</div>
           </div>
 
           <!-- 底部 -->
@@ -396,6 +414,12 @@ function getRankLabel(rank: number): string {
 .avatar-name {
   font-size: 14px;
   color: var(--color-text-main, #e8dfc0);
+}
+
+.treasure-owner {
+  font-size: 11px;
+  color: rgba(200, 190, 170, 0.6);
+  margin-left: auto;
 }
 
 .avatar-extra {

@@ -66,7 +66,9 @@ def execute_gather(
         
     material = random.choice(target.materials)
     
-    base_quantity = 1
+    # 基础数量 + 区域灵气加成（每约 3 点灵气多 1 份）+ 效果加成
+    region_extra = getattr(region, "essence_density", 0) // 3
+    base_quantity = 1 + region_extra
     extra_materials = int(avatar.effects.get(extra_effect_key, 0) or 0)
     total_quantity = base_quantity + extra_materials
     

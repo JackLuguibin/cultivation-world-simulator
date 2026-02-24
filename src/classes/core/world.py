@@ -40,6 +40,8 @@ class World():
     history: "History" = field(default_factory=lambda: History())
     # 世界开始年份
     start_year: int = 0
+    # 天地灵气（0.0～1.0），影响灵脉产出、物价与天材地宝
+    world_spirit_qi: float = 0.6
 
     def get_info(self, detailed: bool = False, avatar: Optional["Avatar"] = None) -> dict:
         """

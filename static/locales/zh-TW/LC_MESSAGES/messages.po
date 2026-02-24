@@ -2621,6 +2621,9 @@ msgstr "世界初開，天降異象！{name}：{desc}。"
 msgid "phenomenon_change"
 msgstr "{old_name}消散，天地異象再現！{new_name}：{new_desc}。"
 
+msgid "npc_trade_fallback"
+msgstr "{seller} 以 {amount} 靈石將 {item} 售與 {buyer}。"
+
 # Single choice - context and options
 msgid ""
 "Current situation: {context}\n"

@@ -5,10 +5,10 @@ export { systemApi } from './modules/system';
 export { llmApi } from './modules/llm';
 export { eventApi } from './modules/event';
 
-export type { 
-  InitStatusDTO, 
-  LLMConfigDTO, 
-  SaveFileDTO, 
+export type {
+  InitStatusDTO,
+  LLMConfigDTO,
+  SaveFileDTO,
   InitialStateDTO,
   MapResponseDTO,
   GameDataDTO,
@@ -16,5 +16,7 @@ export type {
   PhenomenonDTO,
   GameStartConfigDTO,
   EventDTO,
-  EventsResponseDTO
+  EventsResponseDTO,
+  RankingsDTO,
+  TreasureRankEntry,
 } from '../types/api';

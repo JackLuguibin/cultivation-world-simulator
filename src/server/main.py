@@ -436,6 +436,7 @@ async def init_game_async():
             events_db_path=events_db_path,
             start_year=start_year,
         )
+        world.world_spirit_qi = float(getattr(CONFIG.game, "world_spirit_qi_initial", 0.6))
         sim = Simulator(world)
         # 将地图参数附加到 world 对象，供存档时使用
         world._map_params = game_instance.get("map_params", {"use_random_map": False})
@@ -1351,6 +1352,16 @@ def get_game_data():
         "auxiliaries": auxiliaries_list,
         "alignments": alignments_list
     }
+
+@app.get("/api/meta/rankings")
+def get_rankings():
+    """排行榜：修为榜、宗门榜、长寿榜、异宝榜"""
+    world = game_instance.get("world")
+    if not world:
+        return {"realm": [], "sect": [], "age": [], "treasure": []}
+    from src.systems.rankings import get_all_rankings
+    return get_all_rankings(world)
+
 
 @app.get("/api/meta/avatar_list")
 def get_avatar_list_simple():
