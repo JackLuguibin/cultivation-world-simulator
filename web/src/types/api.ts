@@ -55,6 +55,7 @@ export interface MapResponseDTO {
   config?: {
     water_speed?: string;
     cloud_freq?: string;
+    weather?: 'none' | 'low' | 'high';
   };
 }
 

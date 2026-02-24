@@ -6,6 +6,7 @@ const SOUND_URLS = {
   cancel: '/sfx/cancel.ogg',
   select: '/sfx/select.ogg',
   open: '/sfx/open.ogg',
+  thunder: '/sfx/thunder.ogg',
 } as const;
 
 export type SoundType = keyof typeof SOUND_URLS;

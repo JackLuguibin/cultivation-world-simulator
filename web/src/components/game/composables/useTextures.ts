@@ -133,6 +133,14 @@ export function useTextures() {
         )
     }
 
+    // 天气特效贴图（可选）：放入 assets/weather/ 后生效，见 assets/weather/README.md
+    const weatherKeys = ['rain_light', 'rain_dark', 'snowflake', 'wind_leaf'] as const
+    const weatherPromises = weatherKeys.map((key) =>
+      Assets.load(`/assets/weather/${key}.png`)
+        .then(tex => { textures.value[`weather_${key}`] = tex })
+        .catch(() => { /* 无贴图时使用程序绘制 */ })
+    )
+
     // Load Avatars based on available IDs
     const avatarPromises: Promise<void>[] = []
     
@@ -152,7 +160,7 @@ export function useTextures() {
         )
     }
 
-    await Promise.all([...tilePromises, ...variantPromises, ...avatarPromises, ...cloudPromises])
+    await Promise.all([...tilePromises, ...variantPromises, ...weatherPromises, ...avatarPromises, ...cloudPromises])
 
     // 为没有基础纹理的变体类型设置默认纹理（使用第0个变体作为默认值）
     Object.keys(TILE_VARIANTS).forEach(key => {

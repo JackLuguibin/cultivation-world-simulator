@@ -6,6 +6,7 @@ import Viewport from './Viewport.vue'
 import MapLayer from './MapLayer.vue'
 import EntityLayer from './EntityLayer.vue'
 import CloudLayer from './CloudLayer.vue'
+import WeatherLayer from './WeatherLayer.vue'
 import { useTextures } from './composables/useTextures'
 
 const container = ref<HTMLElement>()
@@ -78,6 +79,7 @@ onMounted(() => {
         />
         <EntityLayer @avatarSelected="handleAvatarSelected" />
         <CloudLayer :width="mapSize.width" :height="mapSize.height" />
+        <WeatherLayer :width="mapSize.width" :height="mapSize.height" />
       </Viewport>
     </Application>
   </div>

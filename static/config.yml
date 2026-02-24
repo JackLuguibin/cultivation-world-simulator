@@ -69,6 +69,8 @@ save:
 frontend:
   water_speed: low
   cloud_freq: low
+  # 天气效果：none 关闭，low 较少粒子，high 较多粒子与雷暴
+  weather: high
 system:
   language: zh-CN
   host: "127.0.0.1"  # 服务器绑定地址，设为 "0.0.0.0" 允许局域网访问。
