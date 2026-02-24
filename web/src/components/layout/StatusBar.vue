@@ -135,27 +135,51 @@ async function handleSelect(id: number, name: string) {
 
 <style scoped>
 .top-bar {
-  height: 36px;
-  background: #1f1f1f;
-  border-bottom: 1px solid #333;
+  height: 38px;
+  background: linear-gradient(to right, #080b18, #0c1020, #080b18);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.25);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  font-size: 14px;
+  font-size: 13px;
   z-index: 10;
   gap: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(201, 162, 39, 0.1);
+  position: relative;
+}
+
+.top-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201, 162, 39, 0.4), transparent);
 }
 
 .top-bar .title {
   font-weight: bold;
   margin-right: 8px;
+  color: var(--color-gold-bright);
+  letter-spacing: 1px;
+  font-size: 14px;
+  text-shadow: 0 0 8px rgba(201, 162, 39, 0.4);
 }
 
 .center {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.time {
+  color: var(--color-gold-bright);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(201, 162, 39, 0.4);
 }
 
 /* .phenomenon, .divider, .phenomenon-name REMOVED (moved to StatusWidget) */
@@ -264,10 +288,18 @@ async function handleSelect(id: number, name: string) {
   height: 6px;
   border-radius: 50%;
   background: #ff4d4f;
+  box-shadow: 0 0 4px #ff4d4f;
 }
 
 .status-dot.connected {
-  background: #52c41a;
+  background: var(--color-jade);
+  box-shadow: 0 0 6px var(--color-jade);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .author {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { AvatarDetail, EffectEntity } from '@/types/core';
 import { RelationType } from '@/constants/relations';
 import { formatHp } from '@/utils/formatters/number';
@@ -21,6 +21,60 @@ const uiStore = useUiStore();
 const secondaryItem = ref<EffectEntity | null>(null);
 const showObjectiveModal = ref(false);
 const objectiveContent = ref('');
+
+// --- 境界进度条 ---
+// 境界顺序
+const REALM_ORDER = ['练气期', '筑基期', '金丹期', '元婴期', '化神期', '炼虚期', '合体期', '大乘期', '渡劫期'];
+const STAGE_ORDER = ['前期', '中期', '后期'];
+const MAX_LEVEL_PER_STAGE = 10;
+
+const realmProgress = computed(() => {
+  const realm = props.data.realm || '';
+  const level = props.data.level ?? 0;
+  // 每境界30级（前中后各10）
+  const progressInRealm = Math.min((level % 30) / 30, 1);
+  return Math.round(progressInRealm * 100);
+});
+
+const realmColor = computed(() => {
+  const realm = props.data.realm || '';
+  if (realm.includes('练气')) return '#b0b8c8';
+  if (realm.includes('筑基')) return '#4de94d';
+  if (realm.includes('金丹')) return '#f0c040';
+  if (realm.includes('元婴')) return '#a070ff';
+  if (realm.includes('化神')) return '#ff7a30';
+  if (realm.includes('炼虚')) return '#ff4488';
+  if (realm.includes('合体') || realm.includes('大乘') || realm.includes('渡劫')) return '#ffffff';
+  return '#c9a227';
+});
+
+// HP百分比
+const hpPercent = computed(() => {
+  const { cur, max } = props.data.hp;
+  if (!max) return 100;
+  return Math.round((cur / max) * 100);
+});
+
+const hpColor = computed(() => {
+  const p = hpPercent.value;
+  if (p > 70) return '#3ddbb0';
+  if (p > 30) return '#f0c040';
+  return '#e05555';
+});
+
+// 灵根对应五行颜色
+const rootColor = computed(() => {
+  const root = props.data.root || '';
+  if (root.includes('金')) return '#f0c040';
+  if (root.includes('木')) return '#4de94d';
+  if (root.includes('水')) return '#5ab4f0';
+  if (root.includes('火')) return '#ff6b35';
+  if (root.includes('土')) return '#c9a227';
+  if (root.includes('雷') || root.includes('风')) return '#a070ff';
+  if (root.includes('冰') || root.includes('寒')) return '#a0e8ff';
+  if (root.includes('暗') || root.includes('血')) return '#e05555';
+  return '#c0b090';
+});
 
 // --- Computeds ---
 
@@ -128,13 +182,71 @@ async function handleClearObjective() {
       @close="secondaryItem = null" 
     />
 
+    <!-- 角色头部信息区 -->
+    <div class="avatar-header" :class="{ 'is-dead': data.is_dead }">
+      <!-- 灵根光环 + 角色名 -->
+      <div class="avatar-identity">
+        <div class="avatar-aura" :style="{ '--aura-color': rootColor, '--realm-color': realmColor }">
+          <div class="aura-ring outer"></div>
+          <div class="aura-ring inner"></div>
+          <div class="avatar-portrait">
+            <span class="portrait-icon">{{ data.gender === '女' ? '♀' : '♂' }}</span>
+          </div>
+        </div>
+        <div class="avatar-name-block">
+          <div class="avatar-name">
+            {{ data.name }}
+            <span v-if="data.nickname" class="avatar-nickname">「{{ data.nickname }}」</span>
+            <span v-if="data.is_dead" class="dead-mark">✟</span>
+          </div>
+          <div class="avatar-realm-tag" :style="{ color: realmColor }">
+            {{ data.realm }} · 第{{ data.level }}层
+          </div>
+          <div class="avatar-action-tag" v-if="!data.is_dead && data.action_state">
+            {{ data.action_state }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 境界进度条 -->
+      <div class="realm-progress-wrap" v-if="!data.is_dead">
+        <div class="progress-label">
+          <span>修为进度</span>
+          <span :style="{ color: realmColor }">{{ realmProgress }}%</span>
+        </div>
+        <div class="realm-progress-bar">
+          <div
+            class="realm-progress-fill"
+            :style="{ width: realmProgress + '%', background: `linear-gradient(to right, ${realmColor}88, ${realmColor})` }"
+          ></div>
+          <div class="realm-progress-glow" :style="{ width: realmProgress + '%', '--glow-color': realmColor }"></div>
+        </div>
+      </div>
+
+      <!-- HP进度条 -->
+      <div class="hp-bar-wrap" v-if="!data.is_dead">
+        <div class="progress-label">
+          <span>生命</span>
+          <span :style="{ color: hpColor }">{{ formatHp(data.hp.cur, data.hp.max) }}</span>
+        </div>
+        <div class="hp-bar">
+          <div
+            class="hp-fill"
+            :style="{ width: hpPercent + '%', background: `linear-gradient(to right, ${hpColor}88, ${hpColor})` }"
+          ></div>
+        </div>
+      </div>
+
+      <!-- 死亡横幅 -->
+      <div class="dead-banner" v-if="data.is_dead">
+        {{ t('game.info_panel.avatar.dead_with_reason', { reason: data.death_info?.reason || t('game.info_panel.avatar.unknown_reason') }) }}
+      </div>
+    </div>
+
     <!-- Actions Bar -->
     <div class="actions-bar" v-if="!data.is_dead">
       <button class="btn primary" @click="showObjectiveModal = true">{{ t('game.info_panel.avatar.set_objective') }}</button>
       <button class="btn" @click="handleClearObjective">{{ t('game.info_panel.avatar.clear_objective') }}</button>
-    </div>
-    <div class="dead-banner" v-else>
-      {{ t('game.info_panel.avatar.dead_with_reason', { reason: data.death_info?.reason || t('game.info_panel.avatar.unknown_reason') }) }}
     </div>
 
     <div class="content-scroll">
@@ -150,18 +262,11 @@ async function handleClearObjective() {
         </div>
       </div>
 
-      <!-- Action State Banner -->
-      <div v-if="!data.is_dead && data.action_state" class="action-banner">
-        {{ data.action_state }}
-      </div>
-
       <!-- Stats Grid -->
       <div class="stats-grid">
         <StatItem :label="t('game.info_panel.avatar.stats.realm')" :value="data.realm" :sub-value="data.level" />
         <StatItem :label="t('game.info_panel.avatar.stats.age')" :value="`${data.age} / ${data.lifespan}`" />
         <StatItem :label="t('game.info_panel.avatar.stats.origin')" :value="data.origin" />
-        
-        <StatItem :label="t('game.info_panel.avatar.stats.hp')" :value="formatHp(data.hp.cur, data.hp.max)" />
         <StatItem :label="t('game.info_panel.avatar.stats.gender')" :value="data.gender" />
         
         <StatItem 
@@ -343,38 +448,180 @@ async function handleClearObjective() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 0; /* Ensure flex child scrolling works */
-  position: relative; /* For secondary popup */
+  min-height: 0;
+  position: relative;
+}
+
+/* 角色头部区域 */
+.avatar-header {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(to bottom, rgba(201, 162, 39, 0.05), transparent);
+  flex-shrink: 0;
+}
+
+.avatar-header.is-dead {
+  background: linear-gradient(to bottom, rgba(224, 85, 85, 0.05), transparent);
+}
+
+.avatar-identity {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* 灵气光环 */
+.avatar-aura {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.aura-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--aura-color, #c9a227);
+  animation: rotate-ring 8s linear infinite;
+}
+
+.aura-ring.outer {
+  inset: 0;
+  opacity: 0.4;
+}
+
+.aura-ring.inner {
+  inset: 4px;
+  opacity: 0.6;
+  animation-direction: reverse;
+  animation-duration: 5s;
+  border-color: var(--realm-color, #c9a227);
+}
+
+@keyframes rotate-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.avatar-portrait {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--realm-color, #c9a227);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px var(--realm-color, #c9a22740);
+}
+
+.portrait-icon {
+  font-size: 14px;
+  color: var(--realm-color, #c9a227);
+}
+
+.avatar-name-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--color-text-main);
+  letter-spacing: 1px;
+  line-height: 1.3;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.avatar-nickname {
+  font-size: 12px;
+  color: var(--color-gold);
+  font-weight: normal;
+}
+
+.dead-mark {
+  font-size: 12px;
+  color: var(--color-danger);
+  font-weight: normal;
+}
+
+.avatar-realm-tag {
+  font-size: 12px;
+  margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.avatar-action-tag {
+  font-size: 11px;
+  color: var(--color-sky);
+  margin-top: 2px;
+  opacity: 0.85;
+}
+
+/* 进度条 */
+.realm-progress-wrap,
+.hp-bar-wrap {
+  margin-top: 6px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-bottom: 3px;
+}
+
+.realm-progress-bar,
+.hp-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.realm-progress-fill,
+.hp-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.realm-progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  box-shadow: 0 0 6px var(--glow-color, #c9a227);
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .actions-bar {
   display: flex;
   gap: 8px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #333;
-  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border-dim);
+  flex-shrink: 0;
 }
 
 .dead-banner {
-  background: #4a1a1a;
+  background: rgba(74, 26, 26, 0.7);
   color: #ffaaaa;
-  padding: 8px;
-  border-radius: 4px;
+  padding: 6px 10px;
+  border-radius: 3px;
   text-align: center;
-  font-size: 13px;
-  margin-bottom: 12px;
-  border: 1px solid #7a2a2a;
-}
-
-.action-banner {
-  background: rgba(23, 125, 220, 0.15);
-  color: #aaddff;
-  padding: 8px;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 13px;
-  margin-bottom: 8px;
-  border: 1px solid rgba(23, 125, 220, 0.3);
+  font-size: 12px;
+  margin-top: 8px;
+  border: 1px solid rgba(122, 42, 42, 0.6);
 }
 
 .objectives-banner {
@@ -382,10 +629,10 @@ async function handleClearObjective() {
   flex-direction: column;
   gap: 4px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
+  background: rgba(201, 162, 39, 0.04);
+  border-radius: 3px;
   margin-bottom: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(201, 162, 39, 0.1);
 }
 
 .objective-item {
@@ -396,13 +643,14 @@ async function handleClearObjective() {
 }
 
 .objective-item .label {
-  color: #888;
+  color: var(--color-gold-dim);
   white-space: nowrap;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .objective-item .value {
-  color: #ccc;
+  color: var(--color-text-main);
 }
 
 .content-scroll {
@@ -410,17 +658,18 @@ async function handleClearObjective() {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-right: 4px; /* Space for scrollbar */
+  gap: 12px;
+  padding: 10px 12px;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  gap: 6px;
+  background: rgba(201, 162, 39, 0.03);
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-dim);
 }
 
 .section {
@@ -430,18 +679,24 @@ async function handleClearObjective() {
 }
 
 .section-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
-  color: #666;
-  border-bottom: 1px solid #333;
+  color: var(--color-gold-dim);
+  border-bottom: 1px solid var(--color-border-dim);
   padding-bottom: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .text-content {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #ccc;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text-main);
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  border-left: 2px solid rgba(201, 162, 39, 0.2);
 }
 
 .list-container {
@@ -483,28 +738,31 @@ async function handleClearObjective() {
 /* Buttons */
 .btn {
   flex: 1;
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: #ccc;
-  border-radius: 4px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  background: rgba(201, 162, 39, 0.06);
+  color: var(--color-gold);
+  border-radius: 2px;
   cursor: pointer;
   font-size: 12px;
   transition: all 0.2s;
+  letter-spacing: 0.5px;
 }
 
 .btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(201, 162, 39, 0.14);
+  border-color: var(--color-gold);
 }
 
 .btn.primary {
-  background: #177ddc;
-  color: white;
-  border: none;
+  background: rgba(201, 162, 39, 0.18);
+  color: var(--color-gold-bright);
+  border-color: rgba(201, 162, 39, 0.5);
 }
 
 .btn.primary:hover {
-  background: #1890ff;
+  background: rgba(201, 162, 39, 0.28);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.2);
 }
 
 /* Modal */
@@ -514,37 +772,42 @@ async function handleClearObjective() {
   left: -16px;
   right: -16px;
   bottom: -16px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
 .modal {
   width: 280px;
-  background: #222;
-  border: 1px solid #444;
-  border-radius: 8px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-bright);
+  border-radius: 3px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(201, 162, 39, 0.1);
 }
 
 .modal h3 {
   margin: 0;
   font-size: 14px;
-  color: #ddd;
+  color: var(--color-gold);
+  letter-spacing: 1px;
 }
 
 .modal textarea {
   height: 100px;
-  background: #111;
-  border: 1px solid #444;
-  color: #eee;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   padding: 8px;
   resize: none;
+  border-radius: 2px;
+  font-family: inherit;
 }
 
 .modal-footer {
@@ -561,13 +824,42 @@ async function handleClearObjective() {
 }
 
 .effect-source {
-  color: #888;
+  color: var(--color-gold-dim);
   text-align: right;
   white-space: nowrap;
+  font-size: 11px;
 }
 
 .effect-content {
-  color: #aaddff;
-  line-height: 1.4;
+  color: var(--color-sky);
+  line-height: 1.5;
+}
+
+/* 关系行间距 */
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mortal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 2px;
+  font-size: 12px;
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mortal-row .label {
+  color: var(--color-text-secondary);
+}
+
+.mortal-row .value {
+  color: var(--color-text-muted);
+  font-size: 11px;
 }
 </style>

@@ -1,19 +1,54 @@
 :root {
-  font-family: "HarmonyOS Sans", "PingFang SC", "Microsoft YaHei", system-ui,
+  font-family: "霞鹜文楷", "LXGW WenKai", "HarmonyOS Sans", "PingFang SC", "Microsoft YaHei", system-ui,
     -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.4;
   font-weight: 400;
   
-  /* Colors */
-  --color-bg-dark: #050608;
-  --color-text-main: #f6f6f6;
-  --color-text-secondary: #888;
-  --color-border: #333;
+  /* === 修仙世界主题色系 === */
+  /* 基础背景色 - 深墨黑 */
+  --color-bg-dark: #060810;
+  --color-bg-panel: #0c0f1a;
+  --color-bg-card: rgba(12, 15, 28, 0.95);
+  
+  /* 主文字 */
+  --color-text-main: #e8dfc0;
+  --color-text-secondary: #8a8070;
+  --color-text-muted: #554e40;
+  
+  /* 仙气金 - 主色调 */
+  --color-gold: #c9a227;
+  --color-gold-bright: #f0c040;
+  --color-gold-dim: #7a5e14;
+  --color-gold-glow: rgba(201, 162, 39, 0.3);
+  
+  /* 灵力紫 */
+  --color-mystic: #7b4fff;
+  --color-mystic-dim: rgba(123, 79, 255, 0.2);
+  
+  /* 翠玉绿 - 生命/自然 */
+  --color-jade: #3ddbb0;
+  --color-jade-dim: rgba(61, 219, 176, 0.2);
+  
+  /* 血红 - 战斗/危险 */
+  --color-danger: #e05555;
+  --color-danger-dim: rgba(224, 85, 85, 0.18);
+  
+  /* 天蓝 - 互动/社交 */
+  --color-sky: #5ab4f0;
+  --color-sky-dim: rgba(90, 180, 240, 0.18);
+  
+  /* 边框 */
+  --color-border: rgba(201, 162, 39, 0.2);
+  --color-border-dim: rgba(255, 255, 255, 0.06);
+  --color-border-bright: rgba(201, 162, 39, 0.5);
   
   /* Panels */
-  --panel-bg: rgba(24, 24, 24, 0.96);
-  --panel-header-bg: rgba(38, 38, 38, 0.95);
-  --panel-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+  --panel-bg: rgba(8, 11, 22, 0.97);
+  --panel-header-bg: rgba(14, 18, 34, 0.98);
+  --panel-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(201, 162, 39, 0.15);
+  
+  /* 描金边框渐变 */
+  --border-gold: linear-gradient(135deg, rgba(201,162,39,0.6) 0%, rgba(201,162,39,0.2) 50%, rgba(201,162,39,0.6) 100%);
   
   color: var(--color-text-main);
   background-color: var(--color-bg-dark);
@@ -35,8 +70,8 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #050608;
-  color: #f6f6f6;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-main);
 }
 
 body {
@@ -55,29 +90,92 @@ a {
   text-decoration: none;
 }
 
-/* Global Scrollbar Styling */
+/* === 全局滚动条 - 仙侠风格 === */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-  background-color: transparent; /* 关键：修复白色背景问题 */
+  width: 4px;
+  height: 4px;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
+  background: rgba(201, 162, 39, 0.05);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 3px;
+  background: rgba(201, 162, 39, 0.3);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background: rgba(201, 162, 39, 0.5);
 }
 
-/* 修复 Firefox 的滚动条 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
+  scrollbar-color: rgba(201, 162, 39, 0.3) transparent;
+}
+
+/* === 全局仙侠面板样式 === */
+.xianxia-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--panel-shadow);
+  position: relative;
+}
+
+/* 描金角装饰 */
+.xianxia-panel::before,
+.xianxia-panel::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--color-gold);
+  border-style: solid;
+  opacity: 0.7;
+}
+.xianxia-panel::before {
+  top: 3px; left: 3px;
+  border-width: 1px 0 0 1px;
+}
+.xianxia-panel::after {
+  bottom: 3px; right: 3px;
+  border-width: 0 1px 1px 0;
+}
+
+/* === 全局境界颜色 === */
+.realm-qi { color: #c0c0c0; }
+.realm-foundation { color: #4de94d; }
+.realm-core { color: var(--color-gold-bright); }
+.realm-nascent { color: var(--color-mystic); }
+
+/* === 事件类型颜色 === */
+.event-battle { border-left-color: var(--color-danger) !important; }
+.event-breakthrough { border-left-color: var(--color-gold-bright) !important; }
+.event-social { border-left-color: var(--color-sky) !important; }
+.event-trade { border-left-color: var(--color-jade) !important; }
+.event-tribulation { border-left-color: var(--color-mystic) !important; }
+.event-major { border-left-color: var(--color-gold-bright) !important; background: rgba(201, 162, 39, 0.06) !important; }
+
+/* === 闪光动画 === */
+@keyframes golden-pulse {
+  0%, 100% { box-shadow: 0 0 4px var(--color-gold-glow); }
+  50% { box-shadow: 0 0 12px var(--color-gold-glow), 0 0 20px rgba(201, 162, 39, 0.15); }
+}
+
+@keyframes breakthrough-flash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }

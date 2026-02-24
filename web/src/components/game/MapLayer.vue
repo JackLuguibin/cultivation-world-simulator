@@ -48,6 +48,11 @@ function cleanupTicker() {
     ticker.destroy()
     ticker = null
   }
+  if (glowTicker) {
+    glowTicker.stop()
+    glowTicker.destroy()
+    glowTicker = null
+  }
 }
 
 async function renderMap() {
@@ -245,33 +250,40 @@ async function preloadRegionTextures() {
   ])
 }
 
+// 宗门/城市 光晕动画状态
+let glowTicker: Ticker | null = null
+let glowTime = 0
+
 function renderLargeRegions() {
+    if (!mapContainer.value) return
     const regions = Array.from(worldStore.regions.values());
+    
+    // 创建光晕容器（放置在地块贴图之上）
+    const glowContainer = new Container()
+    glowContainer.zIndex = 50
+    const regionClickContainer = new Container()
+    regionClickContainer.zIndex = 150
+    
     for (const region of regions) {
         let baseName: string | null = null;
         
         if (region.type === 'city' && region.id) {
-            // Use city_id instead of city_name (convert to number)
             const cityId = typeof region.id === 'string' ? parseInt(region.id) : region.id
             if (!isNaN(cityId)) {
                 baseName = `city_${cityId}`
             }
         } else if (region.type === 'sect' && region.sect_id) {
-            // Use sect_id instead of sect_name
             baseName = `sect_${region.sect_id}`
         } else if (region.type === 'cultivate' && region.sub_type) {
-            // Use sub_type from backend instead of name matching
-            baseName = region.sub_type  // "cave" or "ruin"
+            baseName = region.sub_type
         }
 
         if (baseName && mapContainer.value) {
-            // Render 4 slices as 2x2 grid
-            // Slice indices: 0=TL, 1=TR, 2=BL, 3=BR
             const positions = [
-                { dx: 0, dy: 0, idx: 0 },  // TL
-                { dx: 1, dy: 0, idx: 1 },  // TR
-                { dx: 0, dy: 1, idx: 2 },  // BL
-                { dx: 1, dy: 1, idx: 3 },  // BR
+                { dx: 0, dy: 0, idx: 0 },
+                { dx: 1, dy: 0, idx: 1 },
+                { dx: 0, dy: 1, idx: 2 },
+                { dx: 1, dy: 1, idx: 3 },
             ]
             
             for (const pos of positions) {
@@ -289,7 +301,63 @@ function renderLargeRegions() {
                 }
             }
         }
+
+        // 宗门和城市：添加脉冲光晕 + 可点击透明区域
+        if (region.type === 'sect' || region.type === 'city') {
+            // 光晕颜色：宗门金色，城市蓝色
+            const glowColor = region.type === 'sect' ? 0xc9a227 : 0x5ab4f0
+            const centerX = (region.x + 1) * TILE_SIZE  // 2x2 center
+            const centerY = (region.y + 1) * TILE_SIZE
+
+            const glowCircle = new Graphics()
+            glowCircle.x = centerX
+            glowCircle.y = centerY
+            // 初始绘制
+            glowCircle.circle(0, 0, TILE_SIZE * 1.2)
+            glowCircle.fill({ color: glowColor, alpha: 0.08 })
+            glowContainer.addChild(glowCircle)
+
+            // 可点击透明覆盖层
+            const hitArea = new Graphics()
+            hitArea.rect(region.x * TILE_SIZE, region.y * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 2)
+            hitArea.fill({ color: 0x000000, alpha: 0.001 })
+            hitArea.eventMode = 'static'
+            hitArea.cursor = 'pointer'
+            hitArea.on('pointertap', () => handleRegionSelect(region))
+            regionClickContainer.addChild(hitArea)
+        }
+
+        // 修炼洞府：添加淡紫色灵气标记
+        if (region.type === 'cultivate') {
+            const centerX = region.x * TILE_SIZE + TILE_SIZE / 2
+            const centerY = region.y * TILE_SIZE + TILE_SIZE / 2
+            const aura = new Graphics()
+            aura.x = centerX
+            aura.y = centerY
+            aura.circle(0, 0, TILE_SIZE * 0.6)
+            aura.fill({ color: 0x7b4fff, alpha: 0.06 })
+            glowContainer.addChild(aura)
+        }
     }
+
+    mapContainer.value.addChild(glowContainer)
+    mapContainer.value.addChild(regionClickContainer)
+
+    // 启动光晕脉冲动画（独立计时器）
+    if (glowTicker) {
+        glowTicker.stop()
+        glowTicker.destroy()
+    }
+    glowTicker = new Ticker()
+    glowTicker.add((t: any) => {
+        glowTime += t.deltaTime * 0.02
+        const pulse = Math.sin(glowTime) * 0.5 + 0.5  // 0..1
+        glowContainer.children.forEach(child => {
+            // 脉冲效果：alpha 在 0.04 ~ 0.14 之间呼吸
+            child.alpha = 0.5 + pulse * 0.5
+        })
+    })
+    glowTicker.start()
 }
 
 function handleRegionSelect(region: RegionSummary) {

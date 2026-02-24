@@ -14,6 +14,12 @@ import StatusBar from './components/layout/StatusBar.vue'
 import EventPanel from './components/game/panels/EventPanel.vue'
 import SystemMenu from './components/SystemMenu.vue'
 import LoadingOverlay from './components/LoadingOverlay.vue'
+import EffectsOverlay from './components/game/effects/EffectsOverlay.vue'
+import HeavenlyDaoPanel from './components/game/panels/HeavenlyDaoPanel.vue'
+import RankingPanel from './components/game/panels/RankingPanel.vue'
+import ChroniclePanel from './components/game/panels/ChroniclePanel.vue'
+import TournamentPanel from './components/game/panels/TournamentPanel.vue'
+import WorldCrisisAlert from './components/game/WorldCrisisAlert.vue'
 
 // Composables
 import { useGameInit } from './composables/useGameInit'
@@ -25,9 +31,20 @@ import { useSidebarResize } from './composables/useSidebarResize'
 // Stores
 import { useUiStore } from './stores/ui'
 import { useSettingStore } from './stores/setting'
+import { useHeavenlyDaoStore } from './stores/heavenlyDao'
+import { useWorldStore } from './stores/world'
 
 const uiStore = useUiStore()
 const settingStore = useSettingStore()
+const daoStore = useHeavenlyDaoStore()
+const worldStore = useWorldStore()
+
+// 天道积分：每月自动积累
+watch(() => [worldStore.year, worldStore.month], ([y, m]) => {
+  if (gameInitialized.value) {
+    daoStore.tickMonth(y as number, m as number)
+  }
+})
 
 const showSplash = ref(true)
 
@@ -229,7 +246,19 @@ onUnmounted(() => {
               @avatarSelected="handleSelection"
               @regionSelected="handleSelection"
             />
+            <!-- 特效覆盖层：境界突破、天劫、奇遇等特效 -->
+            <EffectsOverlay v-if="gameInitialized" />
             <InfoPanelContainer />
+            <!-- 天道干预面板 -->
+            <HeavenlyDaoPanel v-if="gameInitialized" />
+            <!-- 天骄榜 -->
+            <RankingPanel v-if="gameInitialized" />
+            <!-- 世界年鉴 -->
+            <ChroniclePanel v-if="gameInitialized" />
+            <!-- 比武大会 -->
+            <TournamentPanel v-if="gameInitialized" />
+            <!-- 世界危机预警 -->
+            <WorldCrisisAlert v-if="gameInitialized" />
           </div>
           <div
             class="sidebar-resizer"
@@ -262,8 +291,8 @@ onUnmounted(() => {
   flex-direction: column;
   width: 100vw;
   height: 100vh;
-  background: #000;
-  color: #eee;
+  background: var(--color-bg-dark);
+  color: var(--color-text-main);
   overflow: hidden;
   position: relative;
 }
@@ -278,7 +307,7 @@ onUnmounted(() => {
 .map-container {
   flex: 1;
   position: relative;
-  background: #111;
+  background: #06080f;
   overflow: hidden;
 }
 
@@ -288,27 +317,44 @@ onUnmounted(() => {
   right: 10px;
   z-index: 100;
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .control-btn {
-  background: rgba(0,0,0,0.5);
-  border: 1px solid #444;
-  color: #ddd;
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  background: rgba(6, 8, 16, 0.8);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  color: rgba(201, 162, 39, 0.8);
+  width: 38px;
+  height: 38px;
+  border-radius: 3px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  position: relative;
+}
+
+.control-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  opacity: 0;
+  background: radial-gradient(circle at center, rgba(201, 162, 39, 0.15), transparent);
+  transition: opacity 0.2s;
 }
 
 .control-btn:hover {
-  background: rgba(0,0,0,0.8);
-  border-color: #666;
-  color: #fff;
+  background: rgba(201, 162, 39, 0.12);
+  border-color: rgba(201, 162, 39, 0.7);
+  color: var(--color-gold-bright);
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.2);
+}
+
+.control-btn:hover::before {
+  opacity: 1;
 }
 
 .pause-indicator {
@@ -321,18 +367,19 @@ onUnmounted(() => {
 }
 
 .pause-text {
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  padding: 6px 16px;
-  border-radius: 20px;
+  background: rgba(6, 8, 16, 0.85);
+  color: var(--color-gold-bright);
+  padding: 6px 20px;
+  border-radius: 2px;
   font-size: 14px;
-  letter-spacing: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
+  letter-spacing: 4px;
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.15), inset 0 0 8px rgba(201, 162, 39, 0.05);
 }
 
 .sidebar-resizer {
-  width: 4px;
+  width: 3px;
   background: transparent;
   cursor: col-resize;
   transition: background 0.15s;
@@ -341,12 +388,12 @@ onUnmounted(() => {
 
 .sidebar-resizer:hover,
 .sidebar-resizer.is-resizing {
-  background: #555;
+  background: linear-gradient(to bottom, transparent, rgba(201, 162, 39, 0.4), transparent);
 }
 
 .sidebar {
-  background: #181818;
-  border-left: 1px solid #333;
+  background: var(--color-bg-panel);
+  border-left: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   z-index: 20;
