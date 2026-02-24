@@ -5,10 +5,14 @@ from src.classes.color import Color
 
 @total_ordering
 class Realm(Enum):
-    Qi_Refinement = "QI_REFINEMENT"           # 练气
+    Qi_Refinement = "QI_REFINEMENT"                       # 练气
     Foundation_Establishment = "FOUNDATION_ESTABLISHMENT"  # 筑基
-    Core_Formation = "CORE_FORMATION"        # 金丹
-    Nascent_Soul = "NASCENT_SOUL"            # 元婴
+    Core_Formation = "CORE_FORMATION"                      # 金丹
+    Nascent_Soul = "NASCENT_SOUL"                          # 元婴
+    Soul_Formation = "SOUL_FORMATION"                      # 化神
+    Void_Refinement = "VOID_REFINEMENT"                    # 炼虚
+    Body_Integration = "BODY_INTEGRATION"                  # 合体
+    Mahayana = "MAHAYANA"                                  # 大乘
 
     def __str__(self) -> str:
         """返回境界的翻译名称"""
@@ -23,7 +27,11 @@ class Realm(Enum):
             "练气": "QI_REFINEMENT", "QI_REFINEMENT": "QI_REFINEMENT", "QI REFINEMENT": "QI_REFINEMENT",
             "筑基": "FOUNDATION_ESTABLISHMENT", "FOUNDATION_ESTABLISHMENT": "FOUNDATION_ESTABLISHMENT", "FOUNDATION ESTABLISHMENT": "FOUNDATION_ESTABLISHMENT",
             "金丹": "CORE_FORMATION", "CORE_FORMATION": "CORE_FORMATION", "CORE FORMATION": "CORE_FORMATION",
-            "元婴": "NASCENT_SOUL", "NASCENT_SOUL": "NASCENT_SOUL", "NASCENT SOUL": "NASCENT_SOUL"
+            "元婴": "NASCENT_SOUL", "NASCENT_SOUL": "NASCENT_SOUL", "NASCENT SOUL": "NASCENT_SOUL",
+            "化神": "SOUL_FORMATION", "SOUL_FORMATION": "SOUL_FORMATION", "SOUL FORMATION": "SOUL_FORMATION",
+            "炼虚": "VOID_REFINEMENT", "VOID_REFINEMENT": "VOID_REFINEMENT", "VOID REFINEMENT": "VOID_REFINEMENT",
+            "合体": "BODY_INTEGRATION", "BODY_INTEGRATION": "BODY_INTEGRATION", "BODY INTEGRATION": "BODY_INTEGRATION",
+            "大乘": "MAHAYANA", "MAHAYANA": "MAHAYANA",
         }
         realm_id = mapping.get(s, "QI_REFINEMENT")
         return Realm(realm_id)
@@ -36,6 +44,10 @@ class Realm(Enum):
             Realm.Foundation_Establishment: Color.UNCOMMON_GREEN,
             Realm.Core_Formation: Color.EPIC_PURPLE,
             Realm.Nascent_Soul: Color.LEGENDARY_GOLD,
+            Realm.Soul_Formation: (255, 120, 50),    # 橙红色
+            Realm.Void_Refinement: (255, 60, 140),   # 玫瑰红
+            Realm.Body_Integration: (220, 220, 255),  # 近白银色
+            Realm.Mahayana: (255, 255, 255),          # 纯白（飞升之光）
         }
         return color_map.get(self, Color.COMMON_WHITE)
 
@@ -115,6 +127,10 @@ realm_msg_ids = {
     Realm.Foundation_Establishment: "foundation_establishment",
     Realm.Core_Formation: "core_formation",
     Realm.Nascent_Soul: "nascent_soul",
+    Realm.Soul_Formation: "soul_formation",
+    Realm.Void_Refinement: "void_refinement",
+    Realm.Body_Integration: "body_integration",
+    Realm.Mahayana: "mahayana",
 }
 
 stage_msg_ids = {
@@ -129,6 +145,10 @@ REALM_ORDER: tuple[Realm, ...] = (
     Realm.Foundation_Establishment,
     Realm.Core_Formation,
     Realm.Nascent_Soul,
+    Realm.Soul_Formation,
+    Realm.Void_Refinement,
+    Realm.Body_Integration,
+    Realm.Mahayana,
 )
 REALM_RANK: dict[Realm, int] = {realm: idx for idx, realm in enumerate(REALM_ORDER)}
 
@@ -148,6 +168,10 @@ REALM_TO_MOVE_STEP = {
     Realm.Foundation_Establishment: 3,
     Realm.Core_Formation: 4,
     Realm.Nascent_Soul: 5,
+    Realm.Soul_Formation: 6,
+    Realm.Void_Refinement: 7,
+    Realm.Body_Integration: 8,
+    Realm.Mahayana: 10,
 }
 
 class CultivationProgress:
@@ -185,12 +209,10 @@ class CultivationProgress:
     def get_move_step(self) -> int:
         """
         每月能够移动的距离，
-        练气: 2
-        筑基: 3
-        金丹: 4
-        元婴: 5
+        练气: 2, 筑基: 3, 金丹: 4, 元婴: 5
+        化神: 6, 炼虚: 7, 合体: 8, 大乘: 10
         """
-        return REALM_TO_MOVE_STEP[self.realm]
+        return REALM_TO_MOVE_STEP.get(self.realm, 2)
 
     def get_detailed_info(self) -> str:
         from src.i18n import t
@@ -338,10 +360,14 @@ class CultivationProgress:
 
 
 breakthrough_success_rate_by_realm = {
-    Realm.Qi_Refinement: 0.8, # 练气，80%
-    Realm.Foundation_Establishment: 0.6, # 筑基，60%
-    Realm.Core_Formation: 0.4, # 金丹，40%
-    Realm.Nascent_Soul: 0.2, # 元婴，20%
+    Realm.Qi_Refinement: 0.8,              # 练气，80%
+    Realm.Foundation_Establishment: 0.6,   # 筑基，60%
+    Realm.Core_Formation: 0.4,             # 金丹，40%
+    Realm.Nascent_Soul: 0.2,               # 元婴，20%
+    Realm.Soul_Formation: 0.15,            # 化神，15%
+    Realm.Void_Refinement: 0.10,           # 炼虚，10%
+    Realm.Body_Integration: 0.08,          # 合体，8%
+    Realm.Mahayana: 0.05,                  # 大乘，5%（飞升天劫）
 }
 
 breakthrough_fail_reduce_lifespan_by_realm = {
@@ -349,4 +375,8 @@ breakthrough_fail_reduce_lifespan_by_realm = {
     Realm.Foundation_Establishment: 10,
     Realm.Core_Formation: 15,
     Realm.Nascent_Soul: 20,
+    Realm.Soul_Formation: 50,
+    Realm.Void_Refinement: 100,
+    Realm.Body_Integration: 200,
+    Realm.Mahayana: 500,
 }

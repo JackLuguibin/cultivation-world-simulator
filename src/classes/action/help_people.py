@@ -31,6 +31,10 @@ class HelpPeople(TimedAction):
         if self.avatar.magic_stone >= cost:
             self.avatar.magic_stone = self.avatar.magic_stone - cost
             region.change_prosperity(3)
+            # 积累功德（因果值-，负值为功德）
+            self.avatar.modify_karma(-3.0)
+            # 行善提升气运
+            self.avatar.modify_fortune(1.0)
 
     def can_start(self) -> tuple[bool, str]:
         region = self.avatar.tile.region

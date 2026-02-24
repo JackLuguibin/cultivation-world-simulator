@@ -250,6 +250,19 @@ class Simulator:
             avatar.process_elixir_expiration(int(self.world.month_stamp))
             # 2. 更新被动效果 (如HP回复)
             avatar.update_time_effect()
+            # 3. 气运/因果自然回归：每月向0缓慢漂移
+            if avatar.fortune > 0:
+                avatar.modify_fortune(-0.1)
+            elif avatar.fortune < 0:
+                avatar.modify_fortune(0.1)
+            if avatar.karma > 0:
+                avatar.modify_karma(-0.05)
+            elif avatar.karma < 0:
+                avatar.modify_karma(0.05)
+            # 4. 天赋检测与显现
+            from src.systems.talent import try_reveal_talent
+            talent_events = try_reveal_talent(avatar)
+            events.extend(talent_events)
         
         # 使用 gather 并行触发奇遇和霉运
         tasks_fortune = [try_trigger_fortune(avatar) for avatar in living_avatars]
@@ -492,6 +505,16 @@ class Simulator:
 
         # 9. 结算死亡 (注意：此处会修改 living_avatars 列表)
         events.extend(self._phase_resolve_death(living_avatars))
+
+        # 9.5 收集转生/夺舍事件（由 handle_death 暂存到 world）
+        pending_reinc = getattr(self.world, "_pending_reincarnation_events", [])
+        if pending_reinc:
+            events.extend(pending_reinc)
+            self.world._pending_reincarnation_events = []
+
+        # 9.6 处理游荡阴神投胎
+        from src.systems.reincarnation import process_wandering_souls
+        events.extend(process_wandering_souls(self.world))
 
         # 10. 年龄与新生
         events.extend(self._phase_update_age_and_birth(living_avatars))

@@ -296,6 +296,93 @@ async function handleClearObjective() {
         />
       </div>
 
+      <!-- 气运/因果 -->
+      <div class="section fate-section" v-if="data.fortune !== undefined || data.karma !== undefined">
+        <div class="section-title">命运与因果</div>
+        <div class="fate-bars">
+          <!-- 气运条 -->
+          <div class="fate-row" v-if="data.fortune !== undefined">
+            <span class="fate-label">气运</span>
+            <div class="fate-bar-wrap">
+              <div class="fate-bar fortune-bar">
+                <div
+                  class="fate-fill fortune-fill"
+                  :style="{ width: Math.abs(data.fortune) + '%', marginLeft: data.fortune >= 0 ? '50%' : (50 - Math.abs(data.fortune)) + '%' }"
+                  :class="{ positive: data.fortune >= 0, negative: data.fortune < 0 }"
+                ></div>
+                <div class="fate-center-line"></div>
+              </div>
+            </div>
+            <span class="fate-value" :class="{ positive: data.fortune > 20, negative: data.fortune < -20 }">
+              {{ data.fortune > 40 ? '命运亨通' : data.fortune > 10 ? '气运尚可' : data.fortune < -40 ? '气运衰颓' : data.fortune < -10 ? '运势不佳' : '平稳' }}
+            </span>
+          </div>
+          <!-- 因果条 -->
+          <div class="fate-row" v-if="data.karma !== undefined">
+            <span class="fate-label">因果</span>
+            <div class="fate-bar-wrap">
+              <div class="fate-bar karma-bar">
+                <div
+                  class="fate-fill karma-fill"
+                  :style="{ width: Math.abs(data.karma) + '%', marginLeft: data.karma >= 0 ? '50%' : (50 - Math.abs(data.karma)) + '%' }"
+                  :class="{ sinful: data.karma > 0, virtuous: data.karma < 0 }"
+                ></div>
+                <div class="fate-center-line"></div>
+              </div>
+            </div>
+            <span class="fate-value" :class="{ sinful: data.karma > 30, virtuous: data.karma < -30 }">
+              {{ data.karma > 50 ? '杀孽深重' : data.karma > 20 ? '有所杀孽' : data.karma < -50 ? '功德无量' : data.karma < -20 ? '积有功德' : '因果平衡' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 天赋系统 -->
+      <div class="section talents-section" v-if="(data.revealed_talents?.length || data.hidden_talent_count)">
+        <div class="section-title">天赋</div>
+        <div class="talents-grid">
+          <!-- 已显现天赋 -->
+          <div
+            v-for="talent in data.revealed_talents"
+            :key="talent.id"
+            class="talent-chip revealed"
+            :title="talent.desc"
+          >
+            <span class="talent-icon">★</span>
+            {{ talent.name }}
+          </div>
+          <!-- 未显现天赋槽位 -->
+          <div
+            v-for="i in (data.hidden_talent_count || 0)"
+            :key="'hidden-' + i"
+            class="talent-chip hidden"
+            title="隐藏天赋——尚未触发显现"
+          >
+            <span class="talent-icon">?</span>
+            未知
+          </div>
+        </div>
+        <div v-if="data.past_life_name" class="past-life-note">
+          ♻ 前世：{{ data.past_life_name }}
+        </div>
+      </div>
+
+      <!-- 武器认主度/器灵 -->
+      <div class="section weapon-spirit-section" v-if="data.weapon && (data.weapon.mastery !== undefined || data.weapon.weapon_spirit)">
+        <div class="section-title">兵器灵性</div>
+        <div v-if="data.weapon.mastery !== undefined" class="mastery-bar-wrap">
+          <span class="fate-label">认主度</span>
+          <div class="mastery-bar">
+            <div class="mastery-fill" :style="{ width: data.weapon.mastery + '%' }"></div>
+          </div>
+          <span class="mastery-value">{{ data.weapon.mastery }}%</span>
+        </div>
+        <div v-if="data.weapon.weapon_spirit" class="spirit-badge">
+          <span class="spirit-icon">◈</span>
+          器灵「{{ data.weapon.weapon_spirit }}」已觉醒
+        </div>
+      </div>
+
       <!-- Thinking -->
       <div class="section" v-if="data.thinking">
         <div class="section-title">{{ t('game.info_panel.avatar.sections.thinking') }}</div>
@@ -861,5 +948,158 @@ async function handleClearObjective() {
 .mortal-row .value {
   color: var(--color-text-muted);
   font-size: 11px;
+}
+
+/* ===== 气运/因果系统 ===== */
+.fate-section .fate-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fate-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.fate-label {
+  width: 32px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.fate-bar-wrap {
+  flex: 1;
+}
+
+.fate-bar {
+  position: relative;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fate-center-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.3);
+}
+
+.fate-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  transition: all 0.3s;
+}
+
+.fortune-fill.positive { background: linear-gradient(to right, #c9a227aa, #ffd700); }
+.fortune-fill.negative { background: linear-gradient(to right, #444, #666); }
+.karma-fill.sinful { background: linear-gradient(to right, #cc2244aa, #ff3366); }
+.karma-fill.virtuous { background: linear-gradient(to right, #2266ccaa, #3399ff); }
+
+.fate-value {
+  width: 64px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.fate-value.positive { color: #ffd700; }
+.fate-value.negative { color: #888; }
+.fate-value.sinful { color: #ff3366; }
+.fate-value.virtuous { color: #3399ff; }
+
+/* ===== 天赋系统 ===== */
+.talents-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.talent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: help;
+}
+
+.talent-chip.revealed {
+  background: rgba(201, 162, 39, 0.15);
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  color: #ffd700;
+}
+
+.talent-chip.hidden {
+  background: rgba(100, 100, 100, 0.15);
+  border: 1px dashed rgba(120, 120, 120, 0.4);
+  color: var(--color-text-muted);
+}
+
+.talent-icon {
+  font-size: 10px;
+}
+
+.past-life-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #a070ff;
+  opacity: 0.8;
+}
+
+/* ===== 兵器灵性 ===== */
+.mastery-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.mastery-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mastery-fill {
+  height: 100%;
+  background: linear-gradient(to right, #5ab4f088, #5ab4f0);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.mastery-value {
+  width: 36px;
+  text-align: right;
+  color: #5ab4f0;
+  font-size: 11px;
+}
+
+.spirit-badge {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: rgba(0, 200, 200, 0.1);
+  border: 1px solid rgba(0, 200, 200, 0.3);
+  border-radius: 12px;
+  font-size: 11px;
+  color: #3ddbb0;
+}
+
+.spirit-icon {
+  font-size: 12px;
 }
 </style>

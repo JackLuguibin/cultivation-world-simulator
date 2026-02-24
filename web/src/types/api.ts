@@ -171,6 +171,7 @@ export interface EventDTO {
   is_major: boolean;
   is_story: boolean;
   created_at: number;
+  event_type?: string;
 }
 
 export interface EventsResponseDTO {

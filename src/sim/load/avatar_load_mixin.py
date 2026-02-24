@@ -242,7 +242,25 @@ class AvatarLoadMixin:
         avatar.children = [Mortal.from_dict(child_data) for child_data in children_data]
         avatar.relation_start_dates = data.get("relation_start_dates", {})
 
+        # 气运/因果系统
+        avatar.fortune = float(data.get("fortune", 0.0))
+        avatar.karma = float(data.get("karma", 0.0))
+
+        # 丹毒系统
+        avatar.pill_toxicity = dict(data.get("pill_toxicity", {}))
+
+        # 隐藏天赋系统
+        avatar.hidden_talents = list(data.get("hidden_talents", []))
+        avatar.revealed_talents = list(data.get("revealed_talents", []))
+
+        # 转生系统
+        avatar.soul_state = data.get("soul_state", "alive")
+        avatar.past_life_id = data.get("past_life_id", None)
+
         # 加载完成后重新计算effects（确保数值正确）
+        # 需要先将已显现天赋效果应用到 temporary_effects
+        from src.systems.talent import apply_revealed_talent_effects
+        apply_revealed_talent_effects(avatar)
         avatar.recalc_effects()
         
         return avatar

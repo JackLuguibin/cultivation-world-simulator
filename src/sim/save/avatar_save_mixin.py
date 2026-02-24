@@ -129,5 +129,20 @@ class AvatarSaveMixin:
             # 生育相关
             "children": [child.to_dict() for child in self.children],
             "relation_start_dates": self.relation_start_dates,
+
+            # 气运/因果系统
+            "fortune": self.fortune,
+            "karma": self.karma,
+
+            # 丹毒系统
+            "pill_toxicity": dict(self.pill_toxicity),
+
+            # 隐藏天赋系统
+            "hidden_talents": list(self.hidden_talents),
+            "revealed_talents": list(self.revealed_talents),
+
+            # 转生系统
+            "soul_state": self.soul_state,
+            "past_life_id": self.past_life_id,
         }
 

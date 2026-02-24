@@ -336,6 +336,10 @@ def _get_spirit_stone_amount(avatar: Avatar) -> int:
         Realm.Foundation_Establishment: (100, 150),
         Realm.Core_Formation: (200, 300),
         Realm.Nascent_Soul: (400, 600),
+        Realm.Soul_Formation: (800, 1200),
+        Realm.Void_Refinement: (1500, 2500),
+        Realm.Body_Integration: (3000, 5000),
+        Realm.Mahayana: (8000, 15000),
     }
     range_tuple = realm_ranges.get(
         avatar.cultivation_progress.realm, 
@@ -353,6 +357,10 @@ def get_cultivation_exp_reward(avatar: Avatar) -> int:
         Realm.Foundation_Establishment: 800,
         Realm.Core_Formation: 1000,
         Realm.Nascent_Soul: 1200,
+        Realm.Soul_Formation: 1500,
+        Realm.Void_Refinement: 2000,
+        Realm.Body_Integration: 2500,
+        Realm.Mahayana: 3000,
     }
     return realm_exp.get(
         avatar.cultivation_progress.realm,
@@ -383,7 +391,9 @@ async def try_trigger_fortune(avatar: Avatar) -> list[Event]:
     """
     base_prob = float(getattr(CONFIG.game, "fortune_probability", 0.0))
     extra_prob = float(avatar.effects.get("extra_fortune_probability", 0.0))
-    prob = base_prob + extra_prob
+    # 气运加成：fortune 每 +10 点，奇遇概率提升 10%（乘数）
+    fortune_factor = 1.0 + avatar.fortune / 100.0
+    prob = (base_prob + extra_prob) * max(0.1, fortune_factor)
     if prob <= 0.0:
         return []
 
@@ -506,6 +516,12 @@ async def try_trigger_fortune(avatar: Avatar) -> list[Event]:
         res_text = t("{avatar_name} gained {exp_gain} cultivation experience",
                     avatar_name=avatar.name, exp_gain=exp_gain)
 
+    # 气运自然波动：奇遇后气运小幅降低（盛极必衰）
+    avatar.modify_fortune(-2.0)
+    # 若为SPIRIT_STONE或WEAPON等大机缘，再额外减少
+    if kind in (FortuneKind.WEAPON, FortuneKind.AUXILIARY, FortuneKind.TECHNIQUE):
+        avatar.modify_fortune(-3.0)
+
     # 生成故事（异步，等待完成）
     from src.i18n import t
     event_text = t("Encountered fortune ({theme}), {result}",
@@ -608,7 +624,10 @@ async def try_trigger_misfortune(avatar: Avatar) -> list[Event]:
     """
     base_prob = float(getattr(CONFIG.game, "misfortune_probability", 0.0))
     extra_prob = float(avatar.effects.get("extra_misfortune_probability", 0.0))
-    prob = base_prob + extra_prob
+    # 气运越低，霉运越容易触发；因果越深（杀孽越重），霉运概率上升
+    fortune_factor = 1.0 - avatar.fortune / 100.0  # fortune低则factor>1
+    karma_factor = 1.0 + max(0.0, avatar.karma) / 100.0  # 正karma（杀孽）增加霉运
+    prob = (base_prob + extra_prob) * max(0.1, fortune_factor) * karma_factor
     if prob <= 0.0:
         return []
 
@@ -662,6 +681,9 @@ async def try_trigger_misfortune(avatar: Avatar) -> list[Event]:
         
         res_text = t("misfortune_result_backlash", name=avatar.name, amount=actual_loss)
         
+    # 霉运后气运小幅回升（否极泰来）
+    avatar.modify_fortune(1.5)
+
     # 生成故事
     event_text = t("misfortune_event_format", theme=theme, result=res_text)
     story_prompt = t("misfortune_story_prompt")

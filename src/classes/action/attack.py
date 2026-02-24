@@ -46,6 +46,16 @@ class Attack(InstantAction, TargetingMixin):
         self.avatar.increase_weapon_proficiency(proficiency_gain)
         if target is not None:
             target.increase_weapon_proficiency(proficiency_gain)
+
+        # 天赋指标追踪
+        from src.systems.talent import increment_talent_metric
+        increment_talent_metric(self.avatar, "battles_fought")
+        increment_talent_metric(self.avatar, "weapon_use")
+        if target is not None:
+            increment_talent_metric(target, "battles_fought")
+        # 濒死追踪
+        if loser.hp.cur <= loser.hp.max * 0.1:
+            increment_talent_metric(loser, "near_death")
         
         self._last_result = (winner, loser, loser_damage, winner_damage)
 

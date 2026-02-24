@@ -29,6 +29,9 @@ export interface EffectEntity extends EntityBase {
   drops?: EffectEntity[];
   hq_name?: string;
   hq_desc?: string;
+  // 兵器专属
+  mastery?: number;         // 认主度 0-100
+  weapon_spirit?: string;   // 器灵名称
 }
 
 export interface Material extends EffectEntity {
@@ -60,6 +63,21 @@ export interface AvatarDetail extends EntityBase {
     reason: string;
     location: [number, number];
   };
+
+  // 气运/因果系统
+  fortune?: number;
+  karma?: number;
+
+  // 天赋系统
+  revealed_talents?: Array<{ id: string; name: string; desc: string }>;
+  hidden_talent_count?: number; // 未显现天赋数量（仅用于显示"?"槽位）
+
+  // 转生系统
+  soul_state?: string;
+  past_life_name?: string; // 前世角色名（若有）
+
+  // 丹毒系统
+  pill_toxicity?: Record<string, number>;
   
   // 修行状态
   realm: string;
@@ -221,6 +239,9 @@ export interface GameEvent {
   
   // 真实创建时间 (用于精确排序)
   createdAt?: number;
+
+  // 事件类型标签（新增，用于特殊样式显示）
+  event_type?: string;
 
   // 运行时辅助字段
   _seq?: number; 

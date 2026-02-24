@@ -26,3 +26,9 @@ msgstr "燃血"
 
 msgid "elixir_type_heal"
 msgstr "療傷"
+
+msgid "elixir_type_temper"
+msgstr "淬體"
+
+msgid "elixir_type_control"
+msgstr "控制"

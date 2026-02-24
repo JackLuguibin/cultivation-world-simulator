@@ -467,6 +467,10 @@ class AvatarFactory:
         if overrides:
             AvatarFactory._apply_overrides(avatar, overrides)
 
+        # 出生时随机赋予隐藏天赋
+        from src.systems.talent import assign_birth_talents
+        assign_birth_talents(avatar)
+
         return avatar
 
     @staticmethod

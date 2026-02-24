@@ -15,6 +15,11 @@ from src.classes.effect import _merge_effects
 ALLOW_STORY_FROM_REALMS: list[Realm] = [
     Realm.Foundation_Establishment,  # 筑基
     Realm.Core_Formation,            # 金丹
+    Realm.Nascent_Soul,              # 元婴
+    Realm.Soul_Formation,            # 化神
+    Realm.Void_Refinement,           # 炼虚
+    Realm.Body_Integration,          # 合体
+    Realm.Mahayana,                  # 大乘（飞升天劫）
 ]
 
 
@@ -76,12 +81,25 @@ class Breakthrough(TimedAction):
                 old_realm.value,
                 new_realm.value,
             )
+            # 天赋指标追踪
+            from src.systems.talent import increment_talent_metric
+            increment_talent_metric(self.avatar, "breakthroughs")
+            # 成功突破：气运小幅提升
+            self.avatar.modify_fortune(2.0)
+            # 进入大乘：触发世界大事件（到达极限境界）
+            if new_realm == Realm.Mahayana and old_realm != Realm.Mahayana:
+                self._reached_mahayana = True
+            else:
+                self._reached_mahayana = False
         else:
+            self._reached_mahayana = False
             # 突破失败：减少最大寿元上限
             reduce_years = self.avatar.cultivation_progress.get_breakthrough_fail_reduce_lifespan()
             self.avatar.age.decrease_max_lifespan(reduce_years)
             # 记录结果用于 finish 事件
             self._last_result = ("fail", int(reduce_years))
+            # 突破失败：气运小幅下降
+            self.avatar.modify_fortune(-1.0)
 
     def _update_hp_on_breakthrough(self, new_realm):
         """
@@ -150,4 +168,22 @@ class Breakthrough(TimedAction):
         story_result = t("Breakthrough succeeded") if result_ok else t("Breakthrough failed")
         story = await StoryTeller.tell_story(core_text, story_result, self.avatar, self._calamity_other, prompt=prompt, allow_relation_changes=False)
         events.append(Event(self.world.month_stamp, story, related_avatars=rel_ids, is_story=True))
+
+        # 大乘境突破：触发世界格局重塑事件
+        if result_ok and getattr(self, "_reached_mahayana", False):
+            mahayana_text = t(
+                "【世界大事】{avatar} 突破至大乘境，天地异象，万里云动！修仙界再现大乘强者，各方势力震动。",
+                avatar=self.avatar.name
+            )
+            mahayana_event = Event(
+                self.world.month_stamp,
+                mahayana_text,
+                related_avatars=[self.avatar.id],
+                is_major=True
+            )
+            mahayana_event.event_type = "mahayana_reached"
+            events.append(mahayana_event)
+            # 大乘境大幅提升气运
+            self.avatar.modify_fortune(20.0)
+
         return events

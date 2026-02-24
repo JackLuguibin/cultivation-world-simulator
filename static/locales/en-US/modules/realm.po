@@ -25,5 +25,17 @@ msgstr "Core Formation"
 msgid "nascent_soul"
 msgstr "Nascent Soul"
 
+msgid "soul_formation"
+msgstr "Soul Formation"
+
+msgid "void_refinement"
+msgstr "Void Refinement"
+
+msgid "body_integration"
+msgstr "Body Integration"
+
+msgid "mahayana"
+msgstr "Mahayana"
+
 msgid "Mortal"
 msgstr "Mortal"

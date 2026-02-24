@@ -15,3 +15,11 @@ item_id,name_id,desc_id,name,realm,type,desc,price,effects
 3014,ELIXIR_3014_NAME,ELIXIR_3014_DESC,筑基回春丹,FOUNDATION_ESTABLISHMENT,Heal,药力温和醇厚，能快速愈合筑基期修士的肉身损伤（持续5年）。,50,"{duration_month: 60, extra_hp_recovery_rate: 1.0}"
 3015,ELIXIR_3015_NAME,ELIXIR_3015_DESC,金丹回春丹,CORE_FORMATION,Heal,蕴含生机之力，疗伤圣药（持续5年）。,100,"{duration_month: 60, extra_hp_recovery_rate: 2.0}"
 3016,ELIXIR_3016_NAME,ELIXIR_3016_DESC,元婴回春丹,NASCENT_SOUL,Heal,蕴含造化生机，肉身修复极快（持续5年）。,200,"{duration_month: 60, extra_hp_recovery_rate: 5.0}"
+3017,ELIXIR_3017_NAME,ELIXIR_3017_DESC,练气淬体丹,QI_REFINEMENT,Temper,强化肉身筋脉，永久提升战斗力（限服一颗）。,80,{extra_battle_strength_points: 0.5}
+3018,ELIXIR_3018_NAME,ELIXIR_3018_DESC,筑基淬体丹,FOUNDATION_ESTABLISHMENT,Temper,以天地精华锻炼骨血，永久强化战力（限服一颗）。,300,{extra_battle_strength_points: 1.0}
+3019,ELIXIR_3019_NAME,ELIXIR_3019_DESC,金丹淬体丹,CORE_FORMATION,Temper,凝练真元于肉身，金丹强者专属（限服一颗）。,800,{extra_battle_strength_points: 1.5}
+3020,ELIXIR_3020_NAME,ELIXIR_3020_DESC,元婴淬体丹,NASCENT_SOUL,Temper,元婴期强者肉身锻体圣药（限服一颗）。,2000,{extra_battle_strength_points: 2.0}
+3021,ELIXIR_3021_NAME,ELIXIR_3021_DESC,七情丹,QI_REFINEMENT,Control,蕴含奇异之力，服用后情绪大幅波动，可影响行为判断（药效3年）。,150,"{duration_month: 36, extra_misfortune_probability: -0.003}"
+3022,ELIXIR_3022_NAME,ELIXIR_3022_DESC,忘忧散,QI_REFINEMENT,Control,奇异散药，可淡化痛苦记忆，使人心境平和（药效2年）。,100,"{duration_month: 24, extra_fortune_probability: 0.002}"
+3023,ELIXIR_3023_NAME,ELIXIR_3023_DESC,化神破境丹,SOUL_FORMATION,Breakthrough,蕴含化神之意，辅助化神期修士突破瓶颈（药效5年）。,5000,"{duration_month: 60, extra_breakthrough_success_rate: 0.08}"
+3024,ELIXIR_3024_NAME,ELIXIR_3024_DESC,化神长生丹,SOUL_FORMATION,Lifespan,蕴含长生之气，化神修士延寿之宝（限服一颗）。,10000,{extra_max_lifespan: 500}

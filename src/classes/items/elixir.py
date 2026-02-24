@@ -17,6 +17,8 @@ class ElixirType(Enum):
     Lifespan = "Lifespan"          # 延寿
     BurnBlood = "BurnBlood"        # 燃血
     Heal = "Heal"                  # 疗伤
+    Temper = "Temper"              # 淬体（永久强化）
+    Control = "Control"            # 控制/辅助（情绪/记忆相关）
     Unknown = "Unknown"
 
 
@@ -57,6 +59,8 @@ class Elixir(Item):
             ElixirType.Lifespan: "elixir_type_lifespan",
             ElixirType.BurnBlood: "elixir_type_burn_blood",
             ElixirType.Heal: "elixir_type_heal",
+            ElixirType.Temper: "elixir_type_temper",
+            ElixirType.Control: "elixir_type_control",
         }
         msgid = type_name_ids.get(self.type, "Unknown")
         return t(msgid)

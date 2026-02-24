@@ -26,3 +26,9 @@ msgstr "Burn Blood"
 
 msgid "elixir_type_heal"
 msgstr "Heal"
+
+msgid "elixir_type_temper"
+msgstr "Temper"
+
+msgid "elixir_type_control"
+msgstr "Control"

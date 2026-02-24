@@ -23,5 +23,15 @@ def handle_death(world: World, avatar: Avatar, reason: Union[str, DeathReason]) 
     
     # 从管理器中归档（硬移动），并记录变更
     world.avatar_manager.handle_death(avatar.id)
-    
-    # 可以在这里触发其他逻辑，比如检查是否有继承人等
+
+    # 转生/夺舍：异步触发（通过 world._pending_reincarnation_events 暂存）
+    try:
+        from src.systems.reincarnation import try_trigger_reincarnation
+        events = try_trigger_reincarnation(world, avatar)
+        if events:
+            # 将事件暂存到 world，由 simulator 在下一阶段统一收集
+            if not hasattr(world, "_pending_reincarnation_events"):
+                world._pending_reincarnation_events = []
+            world._pending_reincarnation_events.extend(events)
+    except Exception:
+        pass

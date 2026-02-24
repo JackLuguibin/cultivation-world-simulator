@@ -25,5 +25,17 @@ msgstr "金丹"
 msgid "nascent_soul"
 msgstr "元嬰"
 
+msgid "soul_formation"
+msgstr "化神"
+
+msgid "void_refinement"
+msgstr "煉虛"
+
+msgid "body_integration"
+msgstr "合體"
+
+msgid "mahayana"
+msgstr "大乘"
+
 msgid "Mortal"
 msgstr "凡人"

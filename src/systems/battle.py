@@ -18,6 +18,10 @@ _REALM_BASE_STRENGTH = {
     "Foundation_Establishment": 20.0,
     "Core_Formation": 30.0,
     "Nascent_Soul": 40.0,
+    "Soul_Formation": 55.0,    # 化神
+    "Void_Refinement": 70.0,   # 炼虚
+    "Body_Integration": 85.0,  # 合体
+    "Mahayana": 100.0,         # 大乘
 }
 # 小境界（阶段）额外加成
 _STAGE_BONUS_STRENGTH = {
@@ -153,6 +157,7 @@ def decide_battle(attacker: "Avatar", defender: "Avatar") -> Tuple["Avatar", "Av
     结算战斗，返回 (胜者, 败者, 败者掉血, 赢家掉血)。
     - 胜率由战斗力差的逻辑函数给出；
     - 双方伤害均按 Civ6 风格由同一差值决定（对称公式），HP 与战斗力独立。
+    - 器灵保护：若败者拥有觉醒器灵，有10%概率将致命伤害减半。
     """
     p = calc_win_rate(attacker, defender)
     if random.random() < p:
@@ -161,6 +166,13 @@ def decide_battle(attacker: "Avatar", defender: "Avatar") -> Tuple["Avatar", "Av
         winner, loser = defender, attacker
 
     loser_damage, winner_damage = _damage_pair(winner, loser)
+
+    # 器灵保护：若败者有器灵且生命值将低于0，10%概率减半伤害
+    if loser.weapon and loser.weapon.weapon_spirit:
+        if loser.hp.cur - loser_damage <= 0:
+            if random.random() < 0.10:
+                loser_damage = loser_damage // 2
+
     return winner, loser, loser_damage, winner_damage
 
 
@@ -188,6 +200,10 @@ def get_assassination_success_rate(attacker: "Avatar", defender: "Avatar") -> fl
         Realm.Foundation_Establishment: 2,
         Realm.Core_Formation: 3,
         Realm.Nascent_Soul: 4,
+        Realm.Soul_Formation: 5,
+        Realm.Void_Refinement: 6,
+        Realm.Body_Integration: 7,
+        Realm.Mahayana: 8,
     }
     
     base_rate = 0.10
@@ -305,4 +321,9 @@ async def handle_battle_finish(
     # 处理死亡
     if is_fatal:
         handle_death(world, loser, DeathReason(DeathType.BATTLE, killer_name=winner.name))
+        # 杀戮增加杀孽（因果值+）
+        winner.modify_karma(5.0)
+        # 天赋指标追踪：击杀数
+        from src.systems.talent import increment_talent_metric
+        increment_talent_metric(winner, "kills")
     return [result_event, story_event]

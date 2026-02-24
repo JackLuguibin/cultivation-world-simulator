@@ -29,6 +29,30 @@ class NurtureWeapon(TimedAction):
         # 温养兵器增加较多熟练度（5-10）
         proficiency_gain = random.uniform(5.0, 10.0)
         self.avatar.increase_weapon_proficiency(proficiency_gain)
+
+        # 提升认主度，检测器灵觉醒
+        if self.avatar.weapon:
+            spirit_awakened = self.avatar.weapon.increase_mastery(random.randint(5, 15))
+            if spirit_awakened:
+                spirit_name = self.avatar.weapon.weapon_spirit
+                content = t(
+                    "【器灵觉醒】{avatar} 的兵器『{weapon}』器灵觉醒，化名{spirit}！器灵可在危急关头护主。",
+                    avatar=self.avatar.name,
+                    weapon=self.avatar.weapon.name,
+                    spirit=spirit_name,
+                )
+                from src.classes.event import Event as EvClass
+                ev = EvClass(
+                    self.world.month_stamp,
+                    content,
+                    related_avatars=[self.avatar.id],
+                    is_major=True,
+                )
+                ev.event_type = "spirit_awakening"
+                self.avatar.add_event(ev)
+                # 天赋指标追踪
+                from src.systems.talent import increment_talent_metric
+                increment_talent_metric(self.avatar, "weapon_use", 10)
         
         # 如果是练气兵器，有概率升级为筑基兵器
         if self.avatar.weapon and self.avatar.weapon.realm == Realm.Qi_Refinement:

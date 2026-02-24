@@ -10,10 +10,14 @@ class Age:
     
     # 各境界的基础期望寿命（年）
     REALM_LIFESPAN = {
-        Realm.Qi_Refinement: 100,      # 练气期：100年
-        Realm.Foundation_Establishment: 150,  # 筑基期：150年
-        Realm.Core_Formation: 200,      # 金丹期：200年
-        Realm.Nascent_Soul: 500,      # 元婴期：500年
+        Realm.Qi_Refinement: 100,                  # 练气期：100年
+        Realm.Foundation_Establishment: 150,        # 筑基期：150年
+        Realm.Core_Formation: 200,                  # 金丹期：200年
+        Realm.Nascent_Soul: 500,                    # 元婴期：500年
+        Realm.Soul_Formation: 3000,                 # 化神期：3000年
+        Realm.Void_Refinement: 5000,                # 炼虚期：5000年
+        Realm.Body_Integration: 10000,              # 合体期：万年
+        Realm.Mahayana: 50000,                      # 大乘期：近乎无限
     }
 
     

@@ -134,6 +134,28 @@ class Avatar(
     # Key: 对方Avatar ID, Value: 开始时的 MonthStamp (int)
     relation_start_dates: dict[str, int] = field(default_factory=dict)
 
+    # [气运/因果系统]
+    # fortune: 气运值，范围约 -100 ~ +100，影响奇遇概率、机缘品质
+    fortune: float = 0.0
+    # karma: 因果值，正值为杀孽（负面），负值为功德（正面）
+    karma: float = 0.0
+
+    # [隐藏天赋系统]
+    # hidden_talents: 出生时随机赋予的隐藏天赋ID列表（对外不可见）
+    hidden_talents: List[str] = field(default_factory=list)
+    # revealed_talents: 已通过特定事件显现的天赋ID列表
+    revealed_talents: List[str] = field(default_factory=list)
+
+    # [丹毒系统]
+    # pill_toxicity: 各丹药类型的服用次数 key=elixir_type, value=count
+    pill_toxicity: dict = field(default_factory=dict)
+
+    # [转生系统]
+    # soul_state: 灵魂状态 ("alive" / "wandering" / "reincarnated")
+    soul_state: str = "alive"
+    # past_life_id: 前世Avatar的ID（若为转世角色）
+    past_life_id: Optional[str] = None
+
     # 拥有的洞府列表（不参与序列化，通过 load_game 重建）
     owned_regions: List["CultivateRegion"] = field(default_factory=list, init=False)
 
@@ -167,6 +189,29 @@ class Avatar(
         if region.host_avatar == self:
             region.host_avatar = None
 
+    # ========== 气运/因果 ==========
+
+    def modify_fortune(self, delta: float) -> None:
+        """修改气运值，夹紧在 [-100, 100]"""
+        self.fortune = max(-100.0, min(100.0, self.fortune + delta))
+
+    def modify_karma(self, delta: float) -> None:
+        """修改因果值（正=杀孽，负=功德），夹紧在 [-100, 100]"""
+        self.karma = max(-100.0, min(100.0, self.karma + delta))
+
+    # ========== 隐藏天赋 ==========
+
+    def has_talent(self, talent_id: str) -> bool:
+        """检查是否拥有某天赋（含未显现）"""
+        return talent_id in self.hidden_talents or talent_id in self.revealed_talents
+
+    def reveal_talent(self, talent_id: str) -> bool:
+        """显现一个隐藏天赋，返回是否成功"""
+        if talent_id in self.hidden_talents and talent_id not in self.revealed_talents:
+            self.revealed_talents.append(talent_id)
+            return True
+        return False
+
     def add_breakthrough_rate(self, rate: float, duration: int = 1) -> None:
         """
         增加突破成功率（临时效果）
@@ -199,8 +244,22 @@ class Avatar(
 
         # 3. 记录服用状态
         self.elixirs.append(ConsumedElixir(elixir, int(self.world.month_stamp)))
+
+        # 4. 丹毒积累：记录每类丹药的服用次数
+        type_key = elixir.type.value
+        self.pill_toxicity[type_key] = self.pill_toxicity.get(type_key, 0) + 1
+
+        # 5. 丹毒效果：同类丹药服用超过5次产生丹毒减益（降低修炼速度）
+        if self.pill_toxicity.get(type_key, 0) > 5:
+            # 添加丹毒临时减益（持续12个月）
+            self.temporary_effects.append({
+                "source": f"pill_toxicity_{type_key}",
+                "effects": {"extra_fortune_probability": -0.001},
+                "start_month": int(self.world.month_stamp),
+                "duration": 12,
+            })
         
-        # 4. 立即触发属性重算（因为可能有立即生效的数值变化，或者MaxHP/Lifespan改变）
+        # 6. 立即触发属性重算（因为可能有立即生效的数值变化，或者MaxHP/Lifespan改变）
         self.recalc_effects()
         
         return True

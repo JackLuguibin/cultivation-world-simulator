@@ -81,4 +81,8 @@ HP_MAX_BY_REALM = {
     Realm.Foundation_Establishment: 200,
     Realm.Core_Formation: 300,
     Realm.Nascent_Soul: 400,
+    Realm.Soul_Formation: 600,
+    Realm.Void_Refinement: 800,
+    Realm.Body_Integration: 1000,
+    Realm.Mahayana: 1500,
 }

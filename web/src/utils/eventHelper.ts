@@ -19,6 +19,7 @@ export function processNewEvents(rawEvents: any[], currentYear: number, currentM
     isMajor: e.is_major,
     isStory: e.is_story,
     createdAt: e.created_at,
+    event_type: e.event_type,
     _seq: index 
   }));
 }

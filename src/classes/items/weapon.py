@@ -27,11 +27,58 @@ class Weapon(Item):
     desc: str
     effects: dict[str, object] = field(default_factory=dict)
     effect_desc: str = ""
-    # 特殊属性（如万魂幡的吞噬魂魄计数）
+    # 特殊属性（如万魂幡的吞噬魂魄计数；以及认主度mastery、器灵spirit）
     special_data: dict = field(default_factory=dict)
 
     def __hash__(self):
         return hash(self.id)
+
+    # ——— 认主度 / 器灵 ———
+
+    @property
+    def mastery(self) -> int:
+        """认主度 0-100"""
+        return int(self.special_data.get("mastery", 0))
+
+    @mastery.setter
+    def mastery(self, value: int) -> None:
+        self.special_data["mastery"] = max(0, min(100, int(value)))
+
+    @property
+    def weapon_spirit(self) -> Optional[str]:
+        """器灵名称（None 表示尚未孕育）"""
+        return self.special_data.get("weapon_spirit", None)
+
+    @weapon_spirit.setter
+    def weapon_spirit(self, name: Optional[str]) -> None:
+        self.special_data["weapon_spirit"] = name
+
+    def increase_mastery(self, amount: int = 5) -> bool:
+        """
+        提升认主度，返回是否触发器灵觉醒（首次孕育器灵）。
+        元婴（Nascent_Soul）以上的高品质兵器，认主度达到80时有概率孕育器灵。
+        """
+        old = self.mastery
+        self.mastery = old + amount
+        # 检查器灵觉醒条件
+        if self.weapon_spirit is None:
+            high_realm = self.realm in (
+                Realm.Nascent_Soul,
+                Realm.Soul_Formation,
+                Realm.Void_Refinement,
+                Realm.Body_Integration,
+                Realm.Mahayana,
+            )
+            if high_realm and self.mastery >= 80:
+                import random
+                if random.random() < 0.25:  # 25% 概率孕育
+                    spirit_names = [
+                        "灵犀", "道韵", "霜华", "玄影", "清风",
+                        "赤焰", "冰魄", "雷煞", "幽冥", "破苍"
+                    ]
+                    self.weapon_spirit = random.choice(spirit_names)
+                    return True
+        return False
 
     def get_info(self, detailed: bool = False) -> str:
         """获取信息"""
@@ -61,6 +108,8 @@ class Weapon(Item):
             "color": self.realm.color_rgb,
             "type": self.weapon_type.value,
             "effect_desc": self.effect_desc,
+            "mastery": self.mastery,
+            "weapon_spirit": self.weapon_spirit,
         }
 
 

@@ -23,6 +23,9 @@ class Event:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     # 创建时间戳 (Unix timestamp float)
     created_at: float = field(default_factory=time.time)
+    # 事件类型标记（用于前端显示特殊样式）
+    # 例如："talent_reveal", "reincarnation", "possession", "mahayana_reached", "spirit_awakening"
+    event_type: Optional[str] = None
 
     def __str__(self) -> str:
         return f"{get_date_str(int(self.month_stamp))}: {self.content}"
@@ -36,7 +39,8 @@ class Event:
             "is_major": self.is_major,
             "is_story": self.is_story,
             "id": self.id,
-            "created_at": self.created_at
+            "created_at": self.created_at,
+            "event_type": self.event_type,
         }
     
     @classmethod
@@ -49,7 +53,8 @@ class Event:
             is_major=data.get("is_major", False),
             is_story=data.get("is_story", False),
             id=data.get("id", str(uuid.uuid4())),
-            created_at=data.get("created_at", time.time())
+            created_at=data.get("created_at", time.time()),
+            event_type=data.get("event_type", None),
         )
 
 class NullEvent:

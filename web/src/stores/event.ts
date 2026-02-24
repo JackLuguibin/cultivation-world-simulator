@@ -74,6 +74,7 @@ export const useEventStore = defineStore('event', () => {
         isMajor: e.is_major,
         isStory: e.is_story,
         createdAt: e.created_at,
+        event_type: e.event_type,
       }));
 
       // API 返回倒序（最新在前），反转成时间正序（最旧在前，最新在后）

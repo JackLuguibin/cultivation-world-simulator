@@ -180,6 +180,14 @@ function handleEventListClick(e: MouseEvent) {
 
 // 判断事件类型，返回CSS类名
 function getEventTypeClass(event: GameEvent): string {
+  // 新事件类型优先判断
+  const evType = event.event_type
+  if (evType === 'talent_reveal') return 'event-talent'
+  if (evType === 'reincarnation' || evType === 'reincarnation_pending') return 'event-reincarnation'
+  if (evType === 'possession' || evType === 'possession_failed') return 'event-possession'
+  if (evType === 'mahayana_reached') return 'event-mahayana'
+  if (evType === 'spirit_awakening') return 'event-spirit'
+
   if (event.isMajor) return 'event-major'
   const text = event.content || event.text || ''
   if (/攻击|战斗|击败|击杀|刺杀|逃跑|胜利|败北|伤亡|attack|battle|kill|defeat/i.test(text)) return 'event-battle'
@@ -192,6 +200,13 @@ function getEventTypeClass(event: GameEvent): string {
 
 // 事件类型图标
 function getEventIcon(event: GameEvent): string {
+  const evType = event.event_type
+  if (evType === 'talent_reveal') return '★'
+  if (evType === 'reincarnation' || evType === 'reincarnation_pending') return '♻'
+  if (evType === 'possession' || evType === 'possession_failed') return '👁'
+  if (evType === 'mahayana_reached') return '✦'
+  if (evType === 'spirit_awakening') return '◈'
+
   if (event.isMajor) return '✦'
   const text = event.content || event.text || ''
   if (/攻击|战斗|击败|击杀|刺杀|逃跑|胜利|败北/i.test(text)) return '⚔'
@@ -494,4 +509,47 @@ function toggleEventExpand(event: GameEvent) {
   opacity: 0.8;
   text-decoration: underline;
 }
+
+/* ===== 新事件类型样式 ===== */
+
+/* 天赋觉醒 */
+.event-item.event-talent {
+  border-left-color: #ffd700;
+  background: rgba(201, 162, 39, 0.05);
+}
+.event-item.event-talent .event-content { color: #ffd700; }
+
+/* 轮回转生 */
+.event-item.event-reincarnation {
+  border-left-color: #a070ff;
+  background: rgba(160, 112, 255, 0.05);
+}
+.event-item.event-reincarnation .event-content { color: #c8a0ff; }
+
+/* 夺舍 */
+.event-item.event-possession {
+  border-left-color: #ff3366;
+  background: rgba(255, 51, 102, 0.05);
+}
+.event-item.event-possession .event-content { color: #ff6688; }
+
+/* 大乘境突破（彩虹色边框动画） */
+.event-item.event-mahayana {
+  border-left-color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  animation: mahayana-glow 2s ease-in-out infinite alternate;
+}
+.event-item.event-mahayana .event-content { color: #fffde7; font-weight: 600; }
+
+@keyframes mahayana-glow {
+  from { box-shadow: 0 0 6px rgba(255, 200, 50, 0.2); }
+  to { box-shadow: 0 0 12px rgba(150, 200, 255, 0.3); }
+}
+
+/* 器灵觉醒 */
+.event-item.event-spirit {
+  border-left-color: #3ddbb0;
+  background: rgba(61, 219, 176, 0.04);
+}
+.event-item.event-spirit .event-content { color: #3ddbb0; }
 </style>

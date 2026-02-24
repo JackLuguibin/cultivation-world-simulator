@@ -280,6 +280,41 @@ def get_avatar_structured_info(avatar: "Avatar") -> dict:
     # 当前效果
     info[t("Current Effects")] = _get_effects_text(avatar)
 
+    # ===== 新增系统字段 =====
+
+    # 气运/因果系统
+    info["fortune"] = getattr(avatar, "fortune", 0.0)
+    info["karma"] = getattr(avatar, "karma", 0.0)
+
+    # 天赋系统：已显现天赋 + 未显现槽位数量
+    revealed = getattr(avatar, "revealed_talents", [])
+    hidden = getattr(avatar, "hidden_talents", [])
+    from src.systems.talent import get_talent
+    revealed_talents_info = []
+    for tid in revealed:
+        talent = get_talent(tid)
+        if talent:
+            revealed_talents_info.append({
+                "id": tid,
+                "name": talent.name,
+                "desc": talent.desc,
+            })
+    info["revealed_talents"] = revealed_talents_info
+    info["hidden_talent_count"] = len([t_id for t_id in hidden if t_id not in revealed])
+
+    # 转生系统
+    soul_state = getattr(avatar, "soul_state", "alive")
+    info["soul_state"] = soul_state
+    past_life_id = getattr(avatar, "past_life_id", None)
+    if past_life_id:
+        past_avatar = avatar.world.avatar_manager.get_by_id(past_life_id)
+        info["past_life_name"] = past_avatar.name if past_avatar else None
+    else:
+        info["past_life_name"] = None
+
+    # 丹毒系统
+    info["pill_toxicity"] = dict(getattr(avatar, "pill_toxicity", {}))
+
     return info
 
 
